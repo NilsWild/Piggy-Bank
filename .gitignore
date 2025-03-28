@@ -36,6 +36,4 @@ build/
 .DS_Store
 
 ### Build Timestamp Files ###
-.transfer-gateway_last_build
-.account-twin-service_last_build
-.piggybank-ui_last_build
+.*last_build
