@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  transfer-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE_NAME: transfer-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+      - ACCOUNT_TWIN_SERVICE_URL=http://account-twin-service:8081
+    depends_on:
+      - rabbitmq
+    networks:
+      - piggybank-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+      - "15674:15674"  # STOMP over WebSockets port
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    command: >
+      bash -c "rabbitmq-plugins enable rabbitmq_management rabbitmq_web_stomp && rabbitmq-server"
+    networks:
+      - piggybank-network
+
+  account-twin-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE_NAME: account-twin-service
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+      - TRANSFER_GATEWAY_URL=http://transfer-gateway:8080
+    depends_on:
+      - rabbitmq
+    networks:
+      - piggybank-network
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE_NAME: notification-service
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+    depends_on:
+      - rabbitmq
+    networks:
+      - piggybank-network
+
+  piggybank-ui:
+    build:
+      context: .
+      dockerfile: piggybank-ui/Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - transfer-gateway
+      - account-twin-service
+      - notification-service
+    networks:
+      - piggybank-network
+
+networks:
+  piggybank-network:
+    driver: bridge

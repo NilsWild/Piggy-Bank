@@ -1,0 +1,44 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: notification-service
+
+  # Database configuration
+  datasource:
+    url: jdbc:h2:mem:notificationdb
+    username: sa
+    password: password
+    driver-class-name: org.h2.Driver
+
+  # JPA configuration
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        globally_quoted_identifiers: true
+
+  # H2 console configuration
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  # RabbitMQ configuration
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+# Logging configuration
+logging:
+  level:
+    root: INFO
+    de.rwth.swc.piggybank: DEBUG
+    org.hibernate.SQL: INFO
