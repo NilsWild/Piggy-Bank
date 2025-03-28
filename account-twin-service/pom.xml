@@ -79,6 +79,63 @@
             <version>5.8.0</version>
             <scope>test</scope>
         </dependency>
+        <!-- Testcontainers -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>1.19.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>1.19.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>rabbitmq</artifactId>
+            <version>1.19.3</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Awaitility for testing asynchronous operations -->
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <version>4.2.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility-kotlin</artifactId>
+            <version>4.2.0</version>
+            <scope>test</scope>
+        </dependency>
+        <!--InterACt-->
+        <dependency>
+            <groupId>de.interact</groupId>
+            <artifactId>interact-observer-spring-webclient</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.interact</groupId>
+            <artifactId>interact-observer-spring-webmvc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.interact</groupId>
+            <artifactId>interact-observer-spring-amqp</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.interact</groupId>
+            <artifactId>interact-junit5</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.interact</groupId>
+            <artifactId>interact-observation-context-simple</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.interact</groupId>
+            <artifactId>interact-controller-api</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

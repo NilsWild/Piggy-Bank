@@ -65,6 +65,26 @@ The service can be configured using the following environment variables:
 - `SPRING_RABBITMQ_USERNAME` - The RabbitMQ username (default: guest)
 - `SPRING_RABBITMQ_PASSWORD` - The RabbitMQ password (default: guest)
 
+## Testing
+
+### Running All Tests
+
+To run all tests:
+
+```bash
+mvn test
+```
+
+### Running Only InterACt Tests
+
+To run only the InterACt tests (tests annotated with `@InterACtTest`):
+
+```bash
+mvn test -P interact-tests
+```
+
+This uses the `interact-tests` Maven profile, which configures the Surefire plugin to only run tests with the `@InterACtTest` annotation.
+
 ## Integration with Transfer Gateway
 
 The Account Twin Service receives transactions from the Transfer Gateway via the `/api/transactions` endpoint. When a transaction is received, the service:

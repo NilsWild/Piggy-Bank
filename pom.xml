@@ -29,6 +29,7 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <interact.version>1.0-SNAPSHOT</interact.version>
     </properties>
 
     <dependencyManagement>
@@ -50,6 +51,49 @@
                 <groupId>io.kotest</groupId>
                 <artifactId>kotest-assertions-core-jvm</artifactId>
                 <version>5.8.0</version>
+                <scope>test</scope>
+            </dependency>
+            <!--InterACt-->
+            <dependency>
+                <groupId>de.interact</groupId>
+                <artifactId>interact-junit5</artifactId>
+                <version>${interact.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>de.interact</groupId>
+                <artifactId>interact-domain</artifactId>
+                <version>${interact.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>de.interact</groupId>
+                <artifactId>interact-observer-spring-webclient</artifactId>
+                <version>${interact.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>de.interact</groupId>
+                <artifactId>interact-observer-spring-webmvc</artifactId>
+                <version>${interact.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>de.interact</groupId>
+                <artifactId>interact-observer-spring-amqp</artifactId>
+                <version>${interact.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>de.interact</groupId>
+                <artifactId>interact-observation-context-simple</artifactId>
+                <version>${interact.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>de.interact</groupId>
+                <artifactId>interact-controller-api</artifactId>
+                <version>${interact.version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
@@ -110,8 +154,36 @@
                         </dependency>
                     </dependencies>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.2.5</version>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
 
+    <profiles>
+        <profile>
+            <id>interact-tests</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <groups>de.interact.junit.jupiter.annotation.InterACtTest</groups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <repositories>
+        <repository>
+            <id>gitlab-rwth</id>
+            <url>https://git.rwth-aachen.de/api/v4/projects/84754/packages/maven</url>
+        </repository>
+    </repositories>
 </project>
