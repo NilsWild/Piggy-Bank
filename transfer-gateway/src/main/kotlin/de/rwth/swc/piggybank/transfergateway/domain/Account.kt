@@ -1,5 +1,7 @@
 package de.rwth.swc.piggybank.transfergateway.domain
 
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonProperty
 import java.io.Serializable
 
 /**
@@ -11,10 +13,10 @@ import java.io.Serializable
  * @property accountId The unique identifier of the account in the account-twin-service (optional)
  * @throws IllegalArgumentException If the type or identifier is blank
  */
-data class Account(
-    val type: String,
-    val identifier: String,
-    val accountId: String? = null
+data class Account @JsonCreator constructor(
+    @JsonProperty("type") val type: String,
+    @JsonProperty("identifier") val identifier: String,
+    @JsonProperty("accountId") val accountId: String? = null
 ) : Serializable {
     init {
         require(type.isNotBlank()) { "Account type cannot be blank" }

@@ -8,6 +8,7 @@ import org.springframework.amqp.core.TopicExchange
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
+import org.springframework.boot.autoconfigure.amqp.RabbitTemplateCustomizer
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -100,17 +101,11 @@ class RabbitMQConfig {
     /**
      * Configures the RabbitTemplate with the message converter.
      *
-     * @param connectionFactory The connection factory
      * @param messageConverter The message converter
-     * @return The configured RabbitTemplate
+     * @return The RabbitTemplateCustomizer
      */
     @Bean
-    fun rabbitTemplate(
-        connectionFactory: ConnectionFactory,
-        messageConverter: Jackson2JsonMessageConverter
-    ): RabbitTemplate {
-        val rabbitTemplate = RabbitTemplate(connectionFactory)
-        rabbitTemplate.messageConverter = messageConverter
-        return rabbitTemplate
+    fun rabbitTemplateMessageConverterCustomizer(messageConverter: Jackson2JsonMessageConverter): RabbitTemplateCustomizer {
+        return RabbitTemplateCustomizer { template -> template.messageConverter = messageConverter }
     }
 }

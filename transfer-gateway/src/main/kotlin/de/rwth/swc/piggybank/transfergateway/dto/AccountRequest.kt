@@ -1,5 +1,7 @@
 package de.rwth.swc.piggybank.transfergateway.dto
 
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonProperty
 import de.rwth.swc.piggybank.transfergateway.domain.Account
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotNull
@@ -9,10 +11,10 @@ import jakarta.validation.constraints.NotNull
  *
  * @property account The account to create or update
  */
-data class AccountRequest(
+data class AccountRequest @JsonCreator constructor(
     @field:Valid
     @field:NotNull(message = "Account is required")
-    val account: Account
+    @JsonProperty("account") val account: Account
 ) {
     /**
      * Converts this DTO to a domain Account object.
