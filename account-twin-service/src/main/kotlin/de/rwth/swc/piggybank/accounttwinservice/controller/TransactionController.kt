@@ -38,13 +38,13 @@ class TransactionController(private val transactionService: TransactionService) 
 
         try {
             // Check if the transaction already exists
-            if (transactionService.transactionExists(transactionRequest.transferId, transactionRequest.accountId)) {
+            if (transactionService.transactionExists(transactionRequest.transferId, transactionRequest.affectedAccountId)) {
                 logger.info("Transaction already exists, skipping")
                 return ResponseEntity.status(HttpStatus.OK)
                     .body(TransactionResponse.fromDomain(
                         transactionService.getTransactionByTransferIdAndAccountId(
                             transactionRequest.transferId,
-                            transactionRequest.accountId
+                            transactionRequest.affectedAccountId
                         )!!
                     ))
             }
@@ -81,18 +81,18 @@ class TransactionController(private val transactionService: TransactionService) 
     /**
      * Gets all transactions for an account.
      *
-     * @param accountId The ID of the account
+     * @param affectedAccountId The ID of the affected account
      * @param pageable The pagination information
      * @return A page of transactions
      */
-    @GetMapping("/by-account/{accountId}")
+    @GetMapping("/by-account/{affectedAccountId}")
     fun getTransactionsByAccount(
-        @PathVariable accountId: String,
+        @PathVariable affectedAccountId: String,
         pageable: Pageable
     ): ResponseEntity<Page<TransactionResponse>> {
-        logger.info("Getting transactions for account with ID: {}", accountId)
+        logger.info("Getting transactions for account with ID: {}", affectedAccountId)
 
-        val transactions = transactionService.getTransactionsByAccount(accountId, pageable)
+        val transactions = transactionService.getTransactionsByAccount(affectedAccountId, pageable)
         val transactionResponses = transactions.map { TransactionResponse.fromDomain(it) }
 
         return ResponseEntity.ok(transactionResponses)

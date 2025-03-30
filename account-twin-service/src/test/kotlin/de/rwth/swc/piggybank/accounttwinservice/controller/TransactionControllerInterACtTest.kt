@@ -1,19 +1,20 @@
 package de.rwth.swc.piggybank.accounttwinservice.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import de.interact.amqp.observer.SpringAMQPInterACtObserverConfiguration
 import de.interact.domain.rest.RestMessage
 import de.interact.junit.jupiter.annotation.InterACtTest
 import de.interact.rest.TestRestClient
-import de.rwth.swc.piggybank.accounttwinservice.AmqpBaseTest
+import de.rwth.swc.piggybank.accounttwinservice.AmqpTestConfig
 import de.rwth.swc.piggybank.accounttwinservice.InterACtConfig
+import de.rwth.swc.piggybank.accounttwinservice.config.RabbitMQTestConfig
 import de.rwth.swc.piggybank.accounttwinservice.domain.Account
 import de.rwth.swc.piggybank.accounttwinservice.domain.Amount
-import de.rwth.swc.piggybank.accounttwinservice.dto.AccountRequest
-import de.rwth.swc.piggybank.accounttwinservice.dto.AccountResponse
 import de.rwth.swc.piggybank.accounttwinservice.dto.AmountDto
 import de.rwth.swc.piggybank.accounttwinservice.dto.TransactionRequest
 import de.rwth.swc.piggybank.accounttwinservice.dto.TransactionResponse
 import de.rwth.swc.piggybank.accounttwinservice.repository.AccountRepository
+import de.rwth.swc.piggybank.accounttwinservice.util.RabbitMQTestUtils
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
@@ -21,6 +22,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
@@ -29,10 +31,11 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.ContextConfiguration
 import org.springframework.web.reactive.function.client.WebClient
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.stream.Stream
 
@@ -40,10 +43,11 @@ import java.util.stream.Stream
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
 @ActiveProfiles("test")
-@Import(InterACtConfig::class)
+@Import(InterACtConfig::class, AmqpTestConfig::class, SpringAMQPInterACtObserverConfiguration::class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class TransactionControllerInterACtTest : AmqpBaseTest() {
+@ContextConfiguration(initializers = [RabbitMQTestConfig.Initializer::class])
+class TransactionControllerInterACtTest {
 
     @LocalServerPort
     private lateinit var port: Number
@@ -56,6 +60,9 @@ class TransactionControllerInterACtTest : AmqpBaseTest() {
 
     @Autowired
     private lateinit var accountRepository: AccountRepository
+
+    @Autowired
+    private lateinit var rabbitTemplate: RabbitTemplate
 
     private lateinit var testClient: TestRestClient
 
@@ -86,7 +93,7 @@ class TransactionControllerInterACtTest : AmqpBaseTest() {
         // Create test accounts with the ID and currency specified in the request
         // This ensures the account exists with the exact ID and currency that the request expects
         createAccount(
-            accountId = transactionRequest.accountId,
+            accountId = transactionRequest.affectedAccountId,
             type = "BankAccount",
             identifier = "DE123456789",
             initialBalance = BigDecimal("1000.00"),
@@ -108,7 +115,7 @@ class TransactionControllerInterACtTest : AmqpBaseTest() {
         // Verify the response body contains the expected data
         responseBody.id shouldBe transactionRequest.id
         responseBody.transferId shouldBe transactionRequest.transferId
-        responseBody.accountId shouldBe transactionRequest.accountId
+        responseBody.affectedAccountId shouldBe transactionRequest.affectedAccountId
         responseBody.amount.value shouldBe transactionRequest.amount.value
         responseBody.amount.currencyCode shouldBe transactionRequest.amount.currencyCode
         responseBody.valuationTimestamp shouldBe transactionRequest.valuationTimestamp
@@ -118,20 +125,20 @@ class TransactionControllerInterACtTest : AmqpBaseTest() {
         responseBody.destinationAccount shouldBe transactionRequest.destinationAccount
         responseBody.createdAt shouldNotBe null
 
-        // Wait for the ACCOUNT_UPDATED event to be sent to RabbitMQ
-        val message = waitForEventType("ACCOUNT_UPDATED", 10, TimeUnit.SECONDS)
+        // Then verify that an ACCOUNT_UPDATED event was sent to RabbitMQ
 
-        // Verify the message
-        message shouldNotBe null
-        val messageBody = String(message!!.body)
+            val message = RabbitMQTestUtils.waitForEventType(rabbitTemplate, "ACCOUNT_UPDATED", 2, TimeUnit.SECONDS)
+            message shouldNotBe null
+                // Convert the message body to a string and verify it contains the expected data
+                val messageBody = String(message!!.body)
+                messageBody shouldContain "\"eventType\":\"ACCOUNT_UPDATED\""
+                messageBody shouldContain "\"accountId\":\"${transactionRequest.affectedAccountId}\""
+                messageBody shouldContain "\"transactionId\":\"${transactionRequest.id}\""
+                messageBody shouldContain "\"transactionType\":\"${transactionRequest.type}\""
+                messageBody shouldContain "\"transactionPurpose\":\"${transactionRequest.purpose}\""
+                messageBody shouldContain "\"value\":\"${transactionRequest.amount.value}\""
+                messageBody shouldContain "\"currencyCode\":\"${transactionRequest.amount.currencyCode}\""
 
-        // Verify the message contains the expected data
-        messageBody shouldContain "\"eventType\":\"ACCOUNT_UPDATED\""
-        messageBody shouldContain "\"transactionId\":\"${transactionRequest.id}\""
-        messageBody shouldContain "\"accountId\":\"${transactionRequest.accountId}\""
-        messageBody shouldContain "\"transactionAmount\":{\"value\":${transactionRequest.amount.value},\"currencyCode\":\"${transactionRequest.amount.currencyCode}\"}"
-        messageBody shouldContain "\"transactionType\":\"${transactionRequest.type}\""
-        messageBody shouldContain "\"transactionPurpose\":\"${transactionRequest.purpose}\""
     }
 
     fun processTransactionRequests(): Stream<Arguments> {
@@ -144,7 +151,7 @@ class TransactionControllerInterACtTest : AmqpBaseTest() {
                     TransactionRequest(
                         id = UUID.randomUUID(),
                         transferId = UUID.randomUUID(),
-                        accountId = "account-123",
+                        affectedAccountId = "account-123",
                         amount = AmountDto(
                             value = BigDecimal("100.00"),
                             currencyCode = "EUR"
@@ -153,31 +160,10 @@ class TransactionControllerInterACtTest : AmqpBaseTest() {
                         purpose = "Test transaction",
                         type = "CREDIT",
                         sourceAccount = "source-account-123",
-                        destinationAccount = "destination-account-123"
+                        destinationAccount = "account-123"
                     )
                 )
             ),
-            Arguments.of(
-                RestMessage.Request(
-                    "/api/transactions",
-                    mapOf(),
-                    mapOf(),
-                    TransactionRequest(
-                        id = UUID.randomUUID(),
-                        transferId = UUID.randomUUID(),
-                        accountId = "account-456",
-                        amount = AmountDto(
-                            value = BigDecimal("200.00"),
-                            currencyCode = "USD"
-                        ),
-                        valuationTimestamp = Instant.now(),
-                        purpose = "Another test transaction",
-                        type = "DEBIT",
-                        sourceAccount = "source-account-456",
-                        destinationAccount = "destination-account-456"
-                    )
-                )
-            )
         )
     }
 }

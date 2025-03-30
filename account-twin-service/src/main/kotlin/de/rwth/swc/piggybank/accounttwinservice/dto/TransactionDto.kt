@@ -15,17 +15,19 @@ import java.util.UUID
  *
  * @property id The unique identifier of the transaction
  * @property transferId The identifier of the transfer that generated this transaction
- * @property accountId The identifier of the account involved in the transaction
+ * @property affectedAccountId The identifier of the account affected by the transaction
  * @property amount The amount of the transaction
  * @property valuationTimestamp The timestamp when the transaction was valued
  * @property purpose The purpose or description of the transaction
  * @property type The type of the transaction (CREDIT or DEBIT)
+ * @property sourceAccount The account from which the money was received (for CREDIT transactions)
+ * @property destinationAccount The account to which the money was sent (for DEBIT transactions)
  */
 data class TransactionRequest(
     val id: UUID = UUID.randomUUID(),
     val transferId: UUID,
-    @field:NotBlank(message = "Account ID is required")
-    val accountId: String,
+    @field:NotBlank(message = "Affected account ID is required")
+    val affectedAccountId: String,
     @field:Valid
     @field:NotNull(message = "Amount is required")
     val amount: AmountDto,
@@ -46,7 +48,7 @@ data class TransactionRequest(
         return Transaction(
             id = id,
             transferId = transferId,
-            accountId = accountId,
+            affectedAccountId = affectedAccountId,
             account = account,
             amount = amount.toDomain(),
             valuationTimestamp = valuationTimestamp,
@@ -63,17 +65,19 @@ data class TransactionRequest(
  *
  * @property id The unique identifier of the transaction
  * @property transferId The identifier of the transfer that generated this transaction
- * @property accountId The identifier of the account involved in the transaction
+ * @property affectedAccountId The identifier of the account affected by the transaction
  * @property amount The amount of the transaction
  * @property valuationTimestamp The timestamp when the transaction was valued
  * @property purpose The purpose or description of the transaction
  * @property type The type of the transaction (CREDIT or DEBIT)
+ * @property sourceAccount The account from which the money was received (for CREDIT transactions)
+ * @property destinationAccount The account to which the money was sent (for DEBIT transactions)
  * @property createdAt The timestamp when the transaction was created
  */
 data class TransactionResponse(
     val id: UUID,
     val transferId: UUID,
-    val accountId: String,
+    val affectedAccountId: String,
     val amount: AmountDto,
     val valuationTimestamp: Instant,
     val purpose: String,
@@ -93,7 +97,7 @@ data class TransactionResponse(
             return TransactionResponse(
                 id = transaction.id,
                 transferId = transaction.transferId,
-                accountId = transaction.accountId,
+                affectedAccountId = transaction.affectedAccountId,
                 amount = AmountDto.fromDomain(transaction.amount),
                 valuationTimestamp = transaction.valuationTimestamp,
                 purpose = transaction.purpose,

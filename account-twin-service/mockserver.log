@@ -1,0 +1,14 @@
+[DEBUG_LOG] Starting MockServer container...
+[DEBUG_LOG] MockServer container started successfully at http://localhost:63660
+[DEBUG_LOG] Setting transfer-gateway.url to http://localhost:63660 using ApplicationContextInitializer
+[DEBUG_LOG] Setting transfer-gateway.url to http://localhost:63660 using ApplicationContextInitializer
+[DEBUG_LOG] Setting up AccountControllerInterACtTest
+[DEBUG_LOG] MockServer container running: true
+[DEBUG_LOG] MockServer container host: localhost
+[DEBUG_LOG] MockServer container port: 63660
+[DEBUG_LOG] Setting up MockServer expectation in test
+[DEBUG_LOG] MockServer container running: true
+[DEBUG_LOG] Setting up expectation for POST /api/accounts with response true and status code 201
+[DEBUG_LOG] Creating MockServerClient for localhost:63660
+[DEBUG_LOG] Successfully set up expectation for POST /api/accounts
+[DEBUG_LOG] Successfully set up MockServer expectation

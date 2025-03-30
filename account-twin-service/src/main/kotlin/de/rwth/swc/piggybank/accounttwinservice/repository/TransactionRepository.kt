@@ -15,26 +15,26 @@ interface TransactionRepository : JpaRepository<Transaction, UUID> {
     /**
      * Finds all transactions for an account.
      *
-     * @param accountId The ID of the account
+     * @param affectedAccountId The ID of the affected account
      * @param pageable The pagination information
      * @return A page of transactions
      */
-    fun findByAccountId(accountId: String, pageable: Pageable): Page<Transaction>
+    fun findByAffectedAccountId(affectedAccountId: String, pageable: Pageable): Page<Transaction>
 
     /**
      * Finds all transactions for an account.
      *
-     * @param accountId The ID of the account
+     * @param affectedAccountId The ID of the affected account
      * @return A list of transactions
      */
-    fun findByAccountId(accountId: String): List<Transaction>
+    fun findByAffectedAccountId(affectedAccountId: String): List<Transaction>
 
     /**
-     * Finds a transaction by its transfer ID and account ID.
+     * Finds a transaction by its transfer ID and affected account ID.
      *
      * @param transferId The ID of the transfer
-     * @param accountId The ID of the account
+     * @param affectedAccountId The ID of the affected account
      * @return The transaction, or null if not found
      */
-    fun findByTransferIdAndAccountId(transferId: UUID, accountId: String): Transaction?
+    fun findByTransferIdAndAffectedAccountId(transferId: UUID, affectedAccountId: String): Transaction?
 }

@@ -10,7 +10,7 @@ import java.util.UUID
  *
  * @property id The unique identifier of the transaction
  * @property transferId The identifier of the transfer that generated this transaction
- * @property accountId The identifier of the account involved in the transaction
+ * @property affectedAccountId The identifier of the account affected by the transaction
  * @property amount The amount of the transaction
  * @property valuationTimestamp The timestamp when the transaction was valued
  * @property purpose The purpose or description of the transaction
@@ -19,7 +19,7 @@ import java.util.UUID
 data class AccountTwinServiceTransactionRequest(
     val id: UUID,
     val transferId: UUID,
-    val accountId: String,
+    val affectedAccountId: String,
     val amount: Amount,
     val valuationTimestamp: Instant,
     val purpose: String,
@@ -38,7 +38,7 @@ data class AccountTwinServiceTransactionRequest(
             return AccountTwinServiceTransactionRequest(
                 id = transactionRequest.id,
                 transferId = transactionRequest.transferId,
-                accountId = transactionRequest.account.accountId ?: transactionRequest.account.toString(),
+                affectedAccountId = transactionRequest.account.accountId ?: transactionRequest.account.toString(),
                 amount = transactionRequest.amount,
                 valuationTimestamp = transactionRequest.valuationTimestamp,
                 purpose = transactionRequest.purpose,

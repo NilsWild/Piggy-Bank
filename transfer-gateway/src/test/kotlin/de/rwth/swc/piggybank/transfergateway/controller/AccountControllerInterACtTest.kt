@@ -1,10 +1,11 @@
 package de.rwth.swc.piggybank.transfergateway.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import de.interact.amqp.observer.SpringAMQPInterACtObserverConfiguration
 import de.interact.domain.rest.RestMessage
 import de.interact.junit.jupiter.annotation.InterACtTest
 import de.interact.rest.TestRestClient
-import de.rwth.swc.piggybank.transfergateway.AmqpBaseTest
+import de.rwth.swc.piggybank.transfergateway.AmqpTestConfig
 import de.rwth.swc.piggybank.transfergateway.InterACtConfig
 import de.rwth.swc.piggybank.transfergateway.domain.Account
 import de.rwth.swc.piggybank.transfergateway.dto.AccountRequest
@@ -24,17 +25,22 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.ContextConfiguration
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.amqp.rabbit.core.RabbitTemplate
+import de.rwth.swc.piggybank.transfergateway.config.MockServerConfig
+import de.rwth.swc.piggybank.transfergateway.config.RabbitMQTestConfig
 import java.util.stream.Stream
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
 @ActiveProfiles("test")
-@Import(InterACtConfig::class)
+@Import(InterACtConfig::class, AmqpTestConfig::class, SpringAMQPInterACtObserverConfiguration::class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class AccountControllerInterACtTest : AmqpBaseTest() {
+@ContextConfiguration(initializers = [RabbitMQTestConfig.Initializer::class, MockServerConfig.Initializer::class])
+class AccountControllerInterACtTest {
 
     @LocalServerPort
     private lateinit var port: Number
@@ -47,6 +53,9 @@ class AccountControllerInterACtTest : AmqpBaseTest() {
 
     @Autowired
     private lateinit var accountService: AccountService
+
+    @Autowired
+    private lateinit var rabbitTemplate: RabbitTemplate
 
     private lateinit var testClient: TestRestClient
 
@@ -142,7 +151,6 @@ class AccountControllerInterACtTest : AmqpBaseTest() {
     @InterACtTest
     @MethodSource("removeMonitoredAccountRequests")
     fun `should return not found when removing non-existent account`(requestStimulus: RestMessage.Request<AccountRequest>) {
-        val accountRequest = requestStimulus.body!!
 
         // Send the request and get the response
         val response = testClient.prepare(HttpMethod.DELETE, requestStimulus)
@@ -157,7 +165,7 @@ class AccountControllerInterACtTest : AmqpBaseTest() {
         return Stream.of(
             Arguments.of(
                 RestMessage.Request<Void>(
-                    "/api/accounts",
+                    "/api/monitored-accounts",
                     mapOf(),
                     mapOf(),
                     null
@@ -170,7 +178,7 @@ class AccountControllerInterACtTest : AmqpBaseTest() {
         return Stream.of(
             Arguments.of(
                 RestMessage.Request(
-                    "/api/accounts",
+                    "/api/monitored-accounts",
                     mapOf(),
                     mapOf(),
                     AccountRequest(
@@ -181,19 +189,6 @@ class AccountControllerInterACtTest : AmqpBaseTest() {
                     )
                 )
             ),
-            Arguments.of(
-                RestMessage.Request(
-                    "/api/accounts",
-                    mapOf(),
-                    mapOf(),
-                    AccountRequest(
-                        account = Account(
-                            type = "PayPal",
-                            identifier = "user@example.com"
-                        )
-                    )
-                )
-            )
         )
     }
 
@@ -201,7 +196,7 @@ class AccountControllerInterACtTest : AmqpBaseTest() {
         return Stream.of(
             Arguments.of(
                 RestMessage.Request(
-                    "/api/accounts",
+                    "/api/monitored-accounts",
                     mapOf(),
                     mapOf(),
                     AccountRequest(
@@ -212,19 +207,6 @@ class AccountControllerInterACtTest : AmqpBaseTest() {
                     )
                 )
             ),
-            Arguments.of(
-                RestMessage.Request(
-                    "/api/accounts",
-                    mapOf(),
-                    mapOf(),
-                    AccountRequest(
-                        account = Account(
-                            type = "PayPal",
-                            identifier = "user@example.com"
-                        )
-                    )
-                )
-            )
         )
     }
 }

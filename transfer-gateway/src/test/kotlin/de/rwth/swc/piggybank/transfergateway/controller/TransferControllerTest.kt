@@ -6,8 +6,8 @@ import de.rwth.swc.piggybank.transfergateway.domain.Account
 import de.rwth.swc.piggybank.transfergateway.domain.Amount
 import de.rwth.swc.piggybank.transfergateway.dto.TransferRequest
 import de.rwth.swc.piggybank.transfergateway.service.TransferService
-import io.mockk.mockk
 import io.mockk.every
+import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -21,7 +21,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.*
 
 class TransferControllerTest {
 
@@ -51,7 +50,6 @@ class TransferControllerTest {
             purpose = "Test transfer"
         )
 
-        val transfer = transferRequest.toDomain()
         every{transferService.processTransfer(any())}.returns(serviceSuccess)
 
         // When/Then

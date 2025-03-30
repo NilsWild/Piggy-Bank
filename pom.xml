@@ -172,7 +172,10 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <groups>de.interact.junit.jupiter.annotation.InterACtTest</groups>
+                            <includes>
+                                <include>**/*InterACtTest.java</include>
+                                <include>**/*InterACtTest.kt</include>
+                            </includes>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -182,8 +185,26 @@
 
     <repositories>
         <repository>
+            <id>central</id>
+            <name>Maven Central</name>
+            <url>https://repo.maven.apache.org/maven2</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
             <id>gitlab-rwth</id>
+            <name>RWTH GitLab Repository</name>
             <url>https://git.rwth-aachen.de/api/v4/projects/84754/packages/maven</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
         </repository>
     </repositories>
 </project>

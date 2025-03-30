@@ -51,7 +51,7 @@ class AccountControllerTest {
         val accountRequest = AccountRequest(type, identifier, initialBalance)
 
         val account = Account.create(type, identifier, initialBalance.toDomain())
-        
+
         every { accountService.createAccount(any()) } returns account
 
         // When/Then
@@ -346,7 +346,7 @@ class AccountControllerTest {
         return Transaction(
             id = id,
             transferId = UUID.randomUUID(),
-            accountId = accountId,
+            affectedAccountId = accountId,
             account = account,
             amount = Amount(value, "EUR"),
             valuationTimestamp = Instant.now(),

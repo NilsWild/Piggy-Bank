@@ -55,11 +55,13 @@ class TransactionServiceTest {
         val transactionRequest = TransactionRequest(
             id = transactionId,
             transferId = transferId,
-            accountId = accountId,
+            affectedAccountId = accountId,
             amount = amount,
             valuationTimestamp = valuationTimestamp,
             purpose = purpose,
-            type = type
+            type = type,
+            sourceAccount = "source-account",
+            destinationAccount = accountId
         )
 
         val account = Account(
@@ -67,18 +69,6 @@ class TransactionServiceTest {
             type = "BankAccount",
             identifier = "DE123456789",
             balance = Amount(BigDecimal.ZERO, "EUR"),
-            createdAt = Instant.now()
-        )
-
-        val transaction = Transaction(
-            id = transactionId,
-            transferId = transferId,
-            accountId = accountId,
-            account = account,
-            amount = amount.toDomain(),
-            valuationTimestamp = valuationTimestamp,
-            purpose = purpose,
-            type = TransactionType.valueOf(type),
             createdAt = Instant.now()
         )
 
@@ -91,7 +81,7 @@ class TransactionServiceTest {
         // Then
         result.id shouldBe transactionId
         result.transferId shouldBe transferId
-        result.accountId shouldBe accountId
+        result.affectedAccountId shouldBe accountId
         result.amount.value shouldBe amount.value
         result.amount.currencyCode shouldBe amount.currencyCode
         result.purpose shouldBe purpose
@@ -115,11 +105,13 @@ class TransactionServiceTest {
         val transactionRequest = TransactionRequest(
             id = transactionId,
             transferId = transferId,
-            accountId = accountId,
+            affectedAccountId = accountId,
             amount = amount,
             valuationTimestamp = valuationTimestamp,
             purpose = purpose,
-            type = type
+            type = type,
+            sourceAccount = "source-account",
+            destinationAccount = accountId
         )
 
         every { accountRepository.findById(accountId) } returns Optional.empty()
@@ -179,7 +171,7 @@ class TransactionServiceTest {
         val transactions = listOf(transaction1, transaction2)
         val page = PageImpl(transactions, pageable, transactions.size.toLong())
 
-        every { transactionRepository.findByAccountId(accountId, pageable) } returns page
+        every { transactionRepository.findByAffectedAccountId(accountId, pageable) } returns page
 
         // When
         val result = transactionService.getTransactionsByAccount(accountId, pageable)
@@ -190,7 +182,7 @@ class TransactionServiceTest {
         result.content[0] shouldBe transaction1
         result.content[1] shouldBe transaction2
 
-        verify { transactionRepository.findByAccountId(accountId, pageable) }
+        verify { transactionRepository.findByAffectedAccountId(accountId, pageable) }
     }
 
     @Test
@@ -200,7 +192,7 @@ class TransactionServiceTest {
         val accountId = "BankAccount:DE123456789"
         val transaction = createTransaction(UUID.randomUUID(), accountId, "CREDIT", BigDecimal("100.00"), transferId)
 
-        every { transactionRepository.findByTransferIdAndAccountId(transferId, accountId) } returns transaction
+        every { transactionRepository.findByTransferIdAndAffectedAccountId(transferId, accountId) } returns transaction
 
         // When
         val result = transactionService.getTransactionByTransferIdAndAccountId(transferId, accountId)
@@ -208,7 +200,7 @@ class TransactionServiceTest {
         // Then
         result shouldBe transaction
 
-        verify { transactionRepository.findByTransferIdAndAccountId(transferId, accountId) }
+        verify { transactionRepository.findByTransferIdAndAffectedAccountId(transferId, accountId) }
     }
 
     @Test
@@ -217,7 +209,7 @@ class TransactionServiceTest {
         val transferId = UUID.randomUUID()
         val accountId = "BankAccount:DE123456789"
 
-        every { transactionRepository.findByTransferIdAndAccountId(transferId, accountId) } returns null
+        every { transactionRepository.findByTransferIdAndAffectedAccountId(transferId, accountId) } returns null
 
         // When
         val result = transactionService.getTransactionByTransferIdAndAccountId(transferId, accountId)
@@ -225,7 +217,7 @@ class TransactionServiceTest {
         // Then
         result shouldBe null
 
-        verify { transactionRepository.findByTransferIdAndAccountId(transferId, accountId) }
+        verify { transactionRepository.findByTransferIdAndAffectedAccountId(transferId, accountId) }
     }
 
     @Test
@@ -235,7 +227,7 @@ class TransactionServiceTest {
         val accountId = "BankAccount:DE123456789"
         val transaction = createTransaction(UUID.randomUUID(), accountId, "CREDIT", BigDecimal("100.00"), transferId)
 
-        every { transactionRepository.findByTransferIdAndAccountId(transferId, accountId) } returns transaction
+        every { transactionRepository.findByTransferIdAndAffectedAccountId(transferId, accountId) } returns transaction
 
         // When
         val result = transactionService.transactionExists(transferId, accountId)
@@ -243,7 +235,7 @@ class TransactionServiceTest {
         // Then
         result shouldBe true
 
-        verify { transactionRepository.findByTransferIdAndAccountId(transferId, accountId) }
+        verify { transactionRepository.findByTransferIdAndAffectedAccountId(transferId, accountId) }
     }
 
     @Test
@@ -252,7 +244,7 @@ class TransactionServiceTest {
         val transferId = UUID.randomUUID()
         val accountId = "BankAccount:DE123456789"
 
-        every { transactionRepository.findByTransferIdAndAccountId(transferId, accountId) } returns null
+        every { transactionRepository.findByTransferIdAndAffectedAccountId(transferId, accountId) } returns null
 
         // When
         val result = transactionService.transactionExists(transferId, accountId)
@@ -260,7 +252,7 @@ class TransactionServiceTest {
         // Then
         result shouldBe false
 
-        verify { transactionRepository.findByTransferIdAndAccountId(transferId, accountId) }
+        verify { transactionRepository.findByTransferIdAndAffectedAccountId(transferId, accountId) }
     }
 
     private fun createTransaction(
@@ -281,7 +273,7 @@ class TransactionServiceTest {
         return Transaction(
             id = id,
             transferId = transferId,
-            accountId = accountId,
+            affectedAccountId = accountId,
             account = account,
             amount = Amount(value, "EUR"),
             valuationTimestamp = Instant.now(),

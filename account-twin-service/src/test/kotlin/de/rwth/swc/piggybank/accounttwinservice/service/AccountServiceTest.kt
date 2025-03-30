@@ -31,6 +31,7 @@ class AccountServiceTest {
     private val transactionRepository: TransactionRepository = mockk()
     private val rabbitMQService: RabbitMQService = mockk()
     private val transferGatewayClient: TransferGatewayClient = mockk()
+    private val transactionSlot = slot<Transaction>()
 
     @BeforeEach
     fun setUp() {
@@ -50,11 +51,9 @@ class AccountServiceTest {
         val balance = Amount(BigDecimal("100.00"), "EUR")
         val account = Account.create(type, identifier, balance)
 
-        val transactionSlot = slot<Transaction>()
-
         every { accountRepository.existsByTypeAndIdentifier(type, identifier) } returns false
         every { accountRepository.save(account) } returns account
-        every { transactionRepository.save(capture(transactionSlot)) } answers { transactionSlot.captured }
+        every { transactionRepository.save(capture(transactionSlot)) } returns mockk()
         every { rabbitMQService.sendAccountCreatedEvent(account) } just runs
         every { transferGatewayClient.addMonitoredAccount(account) } returns true
 
@@ -72,7 +71,7 @@ class AccountServiceTest {
 
         // Verify the initial transaction
         val initialTransaction = transactionSlot.captured
-        initialTransaction.accountId shouldBe account.id
+        initialTransaction.affectedAccountId shouldBe account.id
         initialTransaction.account shouldBe account
         initialTransaction.amount shouldBe balance
         initialTransaction.purpose shouldBe "Initial balance"
@@ -203,7 +202,7 @@ class AccountServiceTest {
         val transactions = listOf(transaction1, transaction2)
         val page = PageImpl(transactions, pageable, transactions.size.toLong())
 
-        every { transactionRepository.findByAccountId(accountId, pageable) } returns page
+        every { transactionRepository.findByAffectedAccountId(accountId, pageable) } returns page
 
         // When
         val result = accountService.getAccountTransactions(accountId, pageable)
@@ -214,7 +213,7 @@ class AccountServiceTest {
         result.content[0] shouldBe transaction1
         result.content[1] shouldBe transaction2
 
-        verify { transactionRepository.findByAccountId(accountId, pageable) }
+        verify { transactionRepository.findByAffectedAccountId(accountId, pageable) }
     }
 
     @Test
@@ -227,7 +226,7 @@ class AccountServiceTest {
         val transactions = listOf(transaction1, transaction2)
 
         every { accountRepository.findById(accountId) } returns Optional.of(account)
-        every { transactionRepository.findByAccountId(accountId) } returns transactions
+        every { transactionRepository.findByAffectedAccountId(accountId) } returns transactions
         every { transactionRepository.deleteAll(transactions) } just runs
         every { accountRepository.delete(account) } just runs
         every { rabbitMQService.sendAccountDeletedEvent(account) } just runs
@@ -239,7 +238,7 @@ class AccountServiceTest {
         result shouldBe true
 
         verify { accountRepository.findById(accountId) }
-        verify { transactionRepository.findByAccountId(accountId) }
+        verify { transactionRepository.findByAffectedAccountId(accountId) }
         verify { transactionRepository.deleteAll(transactions) }
         verify { accountRepository.delete(account) }
         verify { rabbitMQService.sendAccountDeletedEvent(account) }
@@ -259,7 +258,7 @@ class AccountServiceTest {
         result shouldBe false
 
         verify { accountRepository.findById(accountId) }
-        verify(exactly = 0) { transactionRepository.findByAccountId(any()) }
+        verify(exactly = 0) { transactionRepository.findByAffectedAccountId(any()) }
         verify(exactly = 0) { transactionRepository.deleteAll(any()) }
         verify(exactly = 0) { accountRepository.delete(any()) }
         verify(exactly = 0) { rabbitMQService.sendAccountDeletedEvent(any()) }
@@ -318,7 +317,7 @@ class AccountServiceTest {
         return Transaction(
             id = id,
             transferId = transferId,
-            accountId = account.id,
+            affectedAccountId = account.id,
             account = account,
             amount = Amount(value, "EUR"),
             valuationTimestamp = Instant.now(),

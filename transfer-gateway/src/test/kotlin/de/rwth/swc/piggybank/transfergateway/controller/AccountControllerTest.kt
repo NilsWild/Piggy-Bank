@@ -45,7 +45,7 @@ class AccountControllerTest {
         every { accountService.getAllMonitoredAccounts() } returns accounts
 
         // When/Then
-        mockMvc.perform(get("/api/accounts"))
+        mockMvc.perform(get("/api/monitored-accounts"))
             .andExpect(status().isOk)
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$[0].type").exists())
@@ -71,7 +71,7 @@ class AccountControllerTest {
         // When/Then
         val expectedStatus = if (serviceSuccess) HttpStatus.CREATED.value() else HttpStatus.CONFLICT.value()
         mockMvc.perform(
-            post("/api/accounts")
+            post("/api/monitored-accounts")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(accountRequest))
         )
@@ -95,7 +95,7 @@ class AccountControllerTest {
         // When/Then
         val expectedStatus = if (serviceSuccess) HttpStatus.NO_CONTENT.value() else HttpStatus.NOT_FOUND.value()
         mockMvc.perform(
-            delete("/api/accounts")
+            delete("/api/monitored-accounts")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(accountRequest))
         )
@@ -119,7 +119,7 @@ class AccountControllerTest {
 
         // When/Then
         mockMvc.perform(
-            post("/api/accounts")
+            post("/api/monitored-accounts")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(invalidJson)
         )

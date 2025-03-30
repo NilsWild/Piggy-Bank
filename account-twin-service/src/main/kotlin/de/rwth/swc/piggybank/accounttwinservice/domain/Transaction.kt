@@ -18,8 +18,8 @@ import java.util.UUID
  *
  * @property id The unique identifier of the transaction
  * @property transferId The identifier of the transfer that generated this transaction
- * @property accountId The identifier of the account involved in the transaction
- * @property account The account involved in the transaction
+ * @property affectedAccountId The identifier of the account affected by the transaction
+ * @property account The account affected by the transaction
  * @property amount The amount of the transaction
  * @property valuationTimestamp The timestamp when the transaction was valued
  * @property purpose The purpose or description of the transaction
@@ -39,7 +39,7 @@ data class Transaction(
     val transferId: UUID,
 
     @Column(name = "account_id", nullable = false, insertable = false, updatable = false)
-    val accountId: String,
+    val affectedAccountId: String,
 
     @ManyToOne
     @JoinColumn(name = "account_id", nullable = false)

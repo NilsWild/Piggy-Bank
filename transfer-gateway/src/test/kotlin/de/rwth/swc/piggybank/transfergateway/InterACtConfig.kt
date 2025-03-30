@@ -26,11 +26,6 @@ import org.springframework.web.reactive.function.client.WebClient
 class InterACtConfig {
 
     @Bean
-    fun objectMapper(): ObjectMapper {
-        return ObjectMapper()
-    }
-
-    @Bean
     fun observationManager(objectMapper: ObjectMapper): TestObservationManager {
         SerializationConstants.registerMessageSerializer(MessageBodySerializer(objectMapper))
         SerializationConstants.registerMessageDeserializer(MessageBodyDeserializer(objectMapper))

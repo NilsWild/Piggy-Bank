@@ -51,6 +51,26 @@ To build the project, run the following command:
 mvn clean install
 ```
 
+### Running Tests
+
+#### Running All Tests
+
+To run all tests in all modules:
+
+```bash
+mvn test
+```
+
+#### Running InterACtTests
+
+To run all InterACtTests across all modules:
+
+```bash
+mvn test -P interact-tests
+```
+
+This command uses the `interact-tests` Maven profile, which configures the Surefire plugin to only run test classes with names ending in 'InterACtTest'. These tests verify the interactions between microservices using the InterACt framework.
+
 ### Running the Services
 
 #### Backend Services

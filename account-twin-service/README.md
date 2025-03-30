@@ -77,13 +77,13 @@ mvn test
 
 ### Running Only InterACt Tests
 
-To run only the InterACt tests (tests annotated with `@InterACtTest`):
+To run only the InterACt tests:
 
 ```bash
 mvn test -P interact-tests
 ```
 
-This uses the `interact-tests` Maven profile, which configures the Surefire plugin to only run tests with the `@InterACtTest` annotation.
+This uses the `interact-tests` Maven profile, which configures the Surefire plugin to only run test classes with names ending in 'InterACtTest'.
 
 ## Integration with Transfer Gateway
 

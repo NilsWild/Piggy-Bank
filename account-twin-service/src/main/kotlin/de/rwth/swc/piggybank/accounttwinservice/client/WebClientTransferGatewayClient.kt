@@ -18,6 +18,7 @@ class WebClientTransferGatewayClient(
     @Value("\${transfer-gateway.url}") private val transferGatewayUrl: String
 ) : TransferGatewayClient {
     private val logger = LoggerFactory.getLogger(WebClientTransferGatewayClient::class.java)
+
     private val webClient by lazy {
         webClientBuilder.baseUrl(transferGatewayUrl).build()
     }
@@ -29,14 +30,12 @@ class WebClientTransferGatewayClient(
      * @return true if the account was added, false if it was already in the list
      */
     override fun addMonitoredAccount(account: Account): Boolean {
-        logger.info("Adding account to monitored accounts in TransferGateway: {}", account)
-
         // Create a request object with the account data
         val accountRequest = mapToTransferGatewayAccount(account)
 
         try {
             val response = webClient.post()
-                .uri("/api/accounts")
+                .uri("/api/monitored-accounts")
                 .bodyValue(accountRequest)
                 .retrieve()
                 .toBodilessEntity()
@@ -44,12 +43,10 @@ class WebClientTransferGatewayClient(
 
             // If we get a 201 CREATED response, the account was added successfully
             val added = response?.statusCode == HttpStatus.CREATED
-            logger.info("Account {} added to monitored accounts in TransferGateway", if (added) "successfully" else "already exists")
             return added
         } catch (e: WebClientResponseException) {
             // If we get a 409 CONFLICT response, the account was already in the list
             if (e.statusCode == HttpStatus.CONFLICT) {
-                logger.info("Account already exists in monitored accounts in TransferGateway")
                 return false
             }
 

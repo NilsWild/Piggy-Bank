@@ -63,7 +63,7 @@ class TransactionControllerTest {
         val transactionRequest = TransactionRequest(
             id = transactionId,
             transferId = transferId,
-            accountId = accountId,
+            affectedAccountId = accountId,
             amount = amount,
             valuationTimestamp = valuationTimestamp,
             purpose = purpose,
@@ -81,7 +81,7 @@ class TransactionControllerTest {
         val transaction = Transaction(
             id = transactionId,
             transferId = transferId,
-            accountId = accountId,
+            affectedAccountId = accountId,
             account = account,
             amount = amount.toDomain(),
             valuationTimestamp = valuationTimestamp,
@@ -102,7 +102,7 @@ class TransactionControllerTest {
             .andExpect(status().isCreated)
             .andExpect(jsonPath("$.id").value(transactionId.toString()))
             .andExpect(jsonPath("$.transferId").value(transferId.toString()))
-            .andExpect(jsonPath("$.accountId").value(accountId))
+            .andExpect(jsonPath("$.affectedAccountId").value(accountId))
             .andExpect(jsonPath("$.amount.value").value(amount.value.toDouble()))
             .andExpect(jsonPath("$.amount.currencyCode").value(amount.currencyCode))
             .andExpect(jsonPath("$.purpose").value(purpose))
@@ -126,7 +126,7 @@ class TransactionControllerTest {
         val transactionRequest = TransactionRequest(
             id = transactionId,
             transferId = transferId,
-            accountId = accountId,
+            affectedAccountId = accountId,
             amount = amount,
             valuationTimestamp = valuationTimestamp,
             purpose = purpose,
@@ -144,7 +144,7 @@ class TransactionControllerTest {
         val transaction = Transaction(
             id = transactionId,
             transferId = transferId,
-            accountId = accountId,
+            affectedAccountId = accountId,
             account = account,
             amount = amount.toDomain(),
             valuationTimestamp = valuationTimestamp,
@@ -165,7 +165,7 @@ class TransactionControllerTest {
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.id").value(transactionId.toString()))
             .andExpect(jsonPath("$.transferId").value(transferId.toString()))
-            .andExpect(jsonPath("$.accountId").value(accountId))
+            .andExpect(jsonPath("$.affectedAccountId").value(accountId))
             .andExpect(jsonPath("$.amount.value").value(amount.value.toDouble()))
             .andExpect(jsonPath("$.amount.currencyCode").value(amount.currencyCode))
             .andExpect(jsonPath("$.purpose").value(purpose))
@@ -190,7 +190,7 @@ class TransactionControllerTest {
         val transactionRequest = TransactionRequest(
             id = transactionId,
             transferId = transferId,
-            accountId = accountId,
+            affectedAccountId = accountId,
             amount = amount,
             valuationTimestamp = valuationTimestamp,
             purpose = purpose,
@@ -235,7 +235,7 @@ class TransactionControllerTest {
         val transaction = Transaction(
             id = transactionId,
             transferId = transferId,
-            accountId = accountId,
+            affectedAccountId = accountId,
             account = account,
             amount = amount,
             valuationTimestamp = valuationTimestamp,
@@ -254,7 +254,7 @@ class TransactionControllerTest {
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.id").value(transactionId.toString()))
             .andExpect(jsonPath("$.transferId").value(transferId.toString()))
-            .andExpect(jsonPath("$.accountId").value(accountId))
+            .andExpect(jsonPath("$.affectedAccountId").value(accountId))
             .andExpect(jsonPath("$.amount.value").value(amount.value.toDouble()))
             .andExpect(jsonPath("$.amount.currencyCode").value(amount.currencyCode))
             .andExpect(jsonPath("$.purpose").value(purpose))
@@ -298,7 +298,7 @@ class TransactionControllerTest {
 
         // When/Then
         mockMvc.perform(
-            get("/api/transactions/by-account/{accountId}", accountId)
+            get("/api/transactions/by-account/{affectedAccountId}", accountId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .param("page", "0")
                 .param("size", "20")
@@ -329,7 +329,7 @@ class TransactionControllerTest {
         return Transaction(
             id = id,
             transferId = UUID.randomUUID(),
-            accountId = accountId,
+            affectedAccountId = accountId,
             account = account,
             amount = Amount(value, "EUR"),
             valuationTimestamp = Instant.now(),

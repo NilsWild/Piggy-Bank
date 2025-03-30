@@ -47,7 +47,7 @@ class AccountService(
         val initialTransaction = Transaction(
             id = UUID.randomUUID(),
             transferId = UUID.randomUUID(),
-            accountId = savedAccount.id,
+            affectedAccountId = savedAccount.id,
             account = savedAccount,
             amount = savedAccount.balance,
             valuationTimestamp = Instant.now(),
@@ -115,7 +115,7 @@ class AccountService(
      */
     fun getAccountTransactions(accountId: String, pageable: Pageable): Page<Transaction> {
         logger.info("Getting transactions for account with ID: {}", accountId)
-        return transactionRepository.findByAccountId(accountId, pageable)
+        return transactionRepository.findByAffectedAccountId(accountId, pageable)
     }
 
     /**
@@ -131,7 +131,7 @@ class AccountService(
         val account = accountRepository.findById(accountId).orElse(null) ?: return false
 
         // Delete all transactions for the account
-        val transactions = transactionRepository.findByAccountId(accountId)
+        val transactions = transactionRepository.findByAffectedAccountId(accountId)
         transactionRepository.deleteAll(transactions)
 
         // Delete the account
@@ -153,7 +153,6 @@ class AccountService(
     fun updateAccountBalance(transaction: Transaction): Account {
         logger.info("Updating account balance with transaction: {}", transaction)
 
-        val account = transaction.account
         val updatedAccount = transaction.updateAccountBalance()
 
         // Save the transaction

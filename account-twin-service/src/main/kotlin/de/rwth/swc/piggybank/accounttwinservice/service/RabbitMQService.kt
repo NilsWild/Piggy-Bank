@@ -3,6 +3,9 @@ package de.rwth.swc.piggybank.accounttwinservice.service
 import de.rwth.swc.piggybank.accounttwinservice.domain.Account
 import de.rwth.swc.piggybank.accounttwinservice.domain.Transaction
 import de.rwth.swc.piggybank.accounttwinservice.dto.AccountBalanceResponse
+import de.rwth.swc.piggybank.accounttwinservice.dto.AccountCreatedEvent
+import de.rwth.swc.piggybank.accounttwinservice.dto.AccountDeletedEvent
+import de.rwth.swc.piggybank.accounttwinservice.dto.AccountUpdatedEvent
 import de.rwth.swc.piggybank.accounttwinservice.dto.AmountDto
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -30,13 +33,8 @@ class RabbitMQService(private val rabbitTemplate: RabbitTemplate) {
     fun sendAccountCreatedEvent(account: Account) {
         logger.info("Sending account created event to RabbitMQ: {}", account)
         try {
-            val event = mapOf(
-                "eventType" to "ACCOUNT_CREATED",
-                "accountId" to account.id,
-                "accountType" to account.type,
-                "accountIdentifier" to account.identifier,
-                "balance" to AmountDto.fromDomain(account.balance)
-            )
+            val event = AccountCreatedEvent.fromDomain(account)
+
             rabbitTemplate.convertAndSend(EXCHANGE_NAME, ACCOUNT_CREATED_ROUTING_KEY, event)
             logger.info("Account created event sent successfully")
         } catch (e: Exception) {
@@ -54,17 +52,7 @@ class RabbitMQService(private val rabbitTemplate: RabbitTemplate) {
     fun sendAccountUpdatedEvent(account: Account, transaction: Transaction) {
         logger.info("Sending account updated event to RabbitMQ: {}", account)
         try {
-            val event = mapOf(
-                "eventType" to "ACCOUNT_UPDATED",
-                "accountId" to account.id,
-                "accountType" to account.type,
-                "accountIdentifier" to account.identifier,
-                "balance" to AmountDto.fromDomain(account.balance),
-                "transactionId" to transaction.id,
-                "transactionAmount" to AmountDto.fromDomain(transaction.amount),
-                "transactionType" to transaction.type.name,
-                "transactionPurpose" to transaction.purpose
-            )
+            val event = AccountUpdatedEvent.fromDomain(account, transaction)
             rabbitTemplate.convertAndSend(EXCHANGE_NAME, ACCOUNT_UPDATED_ROUTING_KEY, event)
             logger.info("Account updated event sent successfully")
         } catch (e: Exception) {
@@ -81,12 +69,7 @@ class RabbitMQService(private val rabbitTemplate: RabbitTemplate) {
     fun sendAccountDeletedEvent(account: Account) {
         logger.info("Sending account deleted event to RabbitMQ: {}", account)
         try {
-            val event = mapOf(
-                "eventType" to "ACCOUNT_DELETED",
-                "accountId" to account.id,
-                "accountType" to account.type,
-                "accountIdentifier" to account.identifier
-            )
+            val event = AccountDeletedEvent.fromDomain(account)
             rabbitTemplate.convertAndSend(EXCHANGE_NAME, ACCOUNT_DELETED_ROUTING_KEY, event)
             logger.info("Account deleted event sent successfully")
         } catch (e: Exception) {

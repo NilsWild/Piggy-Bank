@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory
  * REST controller for managing monitored accounts.
  */
 @RestController
-@RequestMapping("/api/accounts")
+@RequestMapping("/api/monitored-accounts")
 class AccountController(private val accountService: AccountService) {
     private val logger = LoggerFactory.getLogger(AccountController::class.java)
 
@@ -39,10 +39,10 @@ class AccountController(private val accountService: AccountService) {
     @PostMapping
     fun addMonitoredAccount(@Valid @RequestBody accountRequest: AccountRequest): ResponseEntity<Void> {
         logger.info("Adding monitored account: {}", accountRequest)
-        
+
         val account = accountRequest.toDomain()
         val added = accountService.addMonitoredAccount(account)
-        
+
         return if (added) {
             logger.info("Account added to monitored accounts")
             ResponseEntity.status(HttpStatus.CREATED).build()
@@ -62,10 +62,10 @@ class AccountController(private val accountService: AccountService) {
     @DeleteMapping
     fun removeMonitoredAccount(@Valid @RequestBody accountRequest: AccountRequest): ResponseEntity<Void> {
         logger.info("Removing monitored account: {}", accountRequest)
-        
+
         val account = accountRequest.toDomain()
         val removed = accountService.removeMonitoredAccount(account)
-        
+
         return if (removed) {
             logger.info("Account removed from monitored accounts")
             ResponseEntity.status(HttpStatus.NO_CONTENT).build()
