@@ -21,6 +21,7 @@
         <module>account-twin-service</module>
         <module>notification-service</module>
         <module>transfer-classifier</module>
+        <module>goal-service</module>
     </modules>
 
     <properties>

@@ -71,6 +71,26 @@ services:
     networks:
       - piggybank-network
 
+  goal-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE_NAME: goal-service
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+    depends_on:
+      - rabbitmq
+      - account-twin-service
+      - transfer-classifier
+    networks:
+      - piggybank-network
+
   piggybank-ui:
     build:
       context: .
@@ -81,6 +101,7 @@ services:
       - transfer-gateway
       - account-twin-service
       - notification-service
+      - goal-service
     networks:
       - piggybank-network
 
