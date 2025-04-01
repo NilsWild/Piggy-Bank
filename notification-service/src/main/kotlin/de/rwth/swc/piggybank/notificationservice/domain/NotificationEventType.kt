@@ -17,5 +17,20 @@ enum class NotificationEventType {
     /**
      * Represents an account deleted event.
      */
-    ACCOUNT_DELETED
+    ACCOUNT_DELETED,
+
+    /**
+     * Represents a goal update event (progress towards a goal).
+     */
+    GOAL_UPDATE,
+
+    /**
+     * Represents a goal achieved event.
+     */
+    GOAL_ACHIEVED,
+
+    /**
+     * Represents a goal failed event.
+     */
+    GOAL_FAILED
 }

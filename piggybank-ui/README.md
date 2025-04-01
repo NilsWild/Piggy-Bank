@@ -135,3 +135,12 @@ The UI communicates with three backend services:
    - Notification delivery and management
 
 The Vite development server is configured to proxy API requests to these services.
+
+## Development Guidelines
+
+This UI follows the PiggyBank project's [Development Guidelines](../docs/DEVELOPMENT_GUIDELINES.md). Please refer to these guidelines for information on:
+
+- Development standards for frontend (TypeScript/React)
+- Code style and formatting
+- Documentation practices
+- Testing requirements

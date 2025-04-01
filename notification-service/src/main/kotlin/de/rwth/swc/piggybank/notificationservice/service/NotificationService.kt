@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.math.BigDecimal
 import java.util.UUID
 
 /**
@@ -222,5 +223,153 @@ class NotificationService(
     fun countUnreadNotifications(): Long {
         logger.info("Counting unread notifications")
         return notificationRepository.countByReadFalse()
+    }
+
+    /**
+     * Processes a goal updated event and generates notifications for subscribed accounts.
+     *
+     * @param accountId The identifier of the account
+     * @param goalId The identifier of the goal
+     * @param goalName The name of the goal
+     * @param goalType The type of the goal
+     * @param progress The current progress of the goal
+     * @param target The target of the goal
+     * @param currencyCode The currency code of the goal
+     */
+    @Transactional
+    fun processGoalUpdatedEvent(
+        accountId: String,
+        goalId: UUID,
+        goalName: String,
+        goalType: String,
+        progress: BigDecimal,
+        target: BigDecimal,
+        currencyCode: String
+    ) {
+        logger.info("Processing goal updated event for account: {}, goal: {}", accountId, goalId)
+
+        // Find all active subscriptions for this account and event type
+        val subscriptions = subscriptionRepository.findByAccountIdAndEventTypeAndActiveTrue(
+            accountId,
+            NotificationEventType.GOAL_UPDATE
+        )
+
+        if (subscriptions.isEmpty()) {
+            logger.info("No active subscriptions found for account: {}", accountId)
+            return
+        }
+
+        // Calculate progress percentage
+        val progressPercentage = if (target > BigDecimal.ZERO) {
+            progress.multiply(BigDecimal(100)).divide(target, 0, BigDecimal.ROUND_HALF_UP)
+        } else {
+            BigDecimal.ZERO
+        }
+
+        // Generate notification message
+        val message = "Your goal '$goalName' is now at $progressPercentage% ($progress of $target $currencyCode)"
+
+        // Create and save a notification
+        val notification = Notification.create(
+            accountId = accountId,
+            eventType = NotificationEventType.GOAL_UPDATE,
+            message = message
+        )
+        val savedNotification = notificationRepository.save(notification)
+
+        // Send the notification to RabbitMQ
+        rabbitMQService.sendNotification(savedNotification)
+
+        logger.info("Created and sent notification for account: {}, goal: {}", accountId, goalId)
+    }
+
+    /**
+     * Processes a goal achieved event and generates notifications for subscribed accounts.
+     *
+     * @param accountId The identifier of the account
+     * @param goalId The identifier of the goal
+     * @param goalName The name of the goal
+     * @param goalType The type of the goal
+     */
+    @Transactional
+    fun processGoalAchievedEvent(
+        accountId: String,
+        goalId: UUID,
+        goalName: String,
+        goalType: String
+    ) {
+        logger.info("Processing goal achieved event for account: {}, goal: {}", accountId, goalId)
+
+        // Find all active subscriptions for this account and event type
+        val subscriptions = subscriptionRepository.findByAccountIdAndEventTypeAndActiveTrue(
+            accountId,
+            NotificationEventType.GOAL_ACHIEVED
+        )
+
+        if (subscriptions.isEmpty()) {
+            logger.info("No active subscriptions found for account: {}", accountId)
+            return
+        }
+
+        // Generate notification message
+        val message = "Congratulations! Your goal '$goalName' has been achieved!"
+
+        // Create and save a notification
+        val notification = Notification.create(
+            accountId = accountId,
+            eventType = NotificationEventType.GOAL_ACHIEVED,
+            message = message
+        )
+        val savedNotification = notificationRepository.save(notification)
+
+        // Send the notification to RabbitMQ
+        rabbitMQService.sendNotification(savedNotification)
+
+        logger.info("Created and sent notification for account: {}, goal: {}", accountId, goalId)
+    }
+
+    /**
+     * Processes a goal failed event and generates notifications for subscribed accounts.
+     *
+     * @param accountId The identifier of the account
+     * @param goalId The identifier of the goal
+     * @param goalName The name of the goal
+     * @param goalType The type of the goal
+     */
+    @Transactional
+    fun processGoalFailedEvent(
+        accountId: String,
+        goalId: UUID,
+        goalName: String,
+        goalType: String
+    ) {
+        logger.info("Processing goal failed event for account: {}, goal: {}", accountId, goalId)
+
+        // Find all active subscriptions for this account and event type
+        val subscriptions = subscriptionRepository.findByAccountIdAndEventTypeAndActiveTrue(
+            accountId,
+            NotificationEventType.GOAL_FAILED
+        )
+
+        if (subscriptions.isEmpty()) {
+            logger.info("No active subscriptions found for account: {}", accountId)
+            return
+        }
+
+        // Generate notification message
+        val message = "Your goal '$goalName' has failed. Don't worry, you can try again!"
+
+        // Create and save a notification
+        val notification = Notification.create(
+            accountId = accountId,
+            eventType = NotificationEventType.GOAL_FAILED,
+            message = message
+        )
+        val savedNotification = notificationRepository.save(notification)
+
+        // Send the notification to RabbitMQ
+        rabbitMQService.sendNotification(savedNotification)
+
+        logger.info("Created and sent notification for account: {}, goal: {}", accountId, goalId)
     }
 }

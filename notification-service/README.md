@@ -74,3 +74,16 @@ The Notification Service listens for account update events from the Account Twin
 2. If subscriptions exist, generates a notification
 3. Saves the notification to the database
 4. Publishes the notification to RabbitMQ for real-time delivery to the UI
+
+## Development Guidelines
+
+This service follows the PiggyBank project's [Development Guidelines](../docs/DEVELOPMENT_GUIDELINES.md). Please refer to these guidelines for information on:
+
+- Development standards
+- Code style and formatting
+- Documentation practices
+- Testing requirements
+
+## Contributing
+
+Contributions are welcome! Please read the project's [Contributing Guide](../CONTRIBUTING.md) for details on the process for submitting pull requests.

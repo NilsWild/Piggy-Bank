@@ -140,3 +140,16 @@ class RestaurantClassifier : TransferClassifier {
     }
 }
 ```
+
+## Development Guidelines
+
+This service follows the PiggyBank project's [Development Guidelines](../docs/DEVELOPMENT_GUIDELINES.md). Please refer to these guidelines for information on:
+
+- Development standards
+- Code style and formatting
+- Documentation practices
+- Testing requirements
+
+## Contributing
+
+Contributions are welcome! Please read the project's [Contributing Guide](../CONTRIBUTING.md) for details on the process for submitting pull requests.

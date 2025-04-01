@@ -203,9 +203,15 @@ Each service has its own README.md file with detailed documentation:
 - GoalService (to be implemented)
 - TransferClassifier (to be implemented)
 
-## Contributing
+## Development Guidelines
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+This project follows specific development guidelines to ensure code quality and consistency. Please refer to the [Development Guidelines](docs/DEVELOPMENT_GUIDELINES.md) for detailed information on:
+
+- Development standards for backend (Kotlin/Spring Boot) and frontend (TypeScript/React)
+- Code style and formatting
+- Documentation practices
+- Testing requirements
+- Contribution guidelines
 
 ## License
 

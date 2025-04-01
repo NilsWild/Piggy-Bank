@@ -89,6 +89,91 @@ class RabbitMQConfig {
     }
 
     /**
+     * Creates a topic exchange for goal events (to listen to).
+     *
+     * @return The topic exchange
+     */
+    @Bean
+    fun goalExchange(): TopicExchange {
+        return TopicExchange(RabbitMQService.GOAL_EXCHANGE_NAME)
+    }
+
+    /**
+     * Creates a queue for goal updated events.
+     *
+     * @return The queue
+     */
+    @Bean
+    fun goalUpdatedQueue(): Queue {
+        return Queue("piggybank.goals.updated.notifications.queue")
+    }
+
+    /**
+     * Creates a queue for goal achieved events.
+     *
+     * @return The queue
+     */
+    @Bean
+    fun goalAchievedQueue(): Queue {
+        return Queue("piggybank.goals.achieved.notifications.queue")
+    }
+
+    /**
+     * Creates a queue for goal failed events.
+     *
+     * @return The queue
+     */
+    @Bean
+    fun goalFailedQueue(): Queue {
+        return Queue("piggybank.goals.failed.notifications.queue")
+    }
+
+    /**
+     * Creates a binding between the goal updated queue and the goal exchange.
+     *
+     * @param goalUpdatedQueue The goal updated queue
+     * @param goalExchange The goal exchange
+     * @return The binding
+     */
+    @Bean
+    fun goalUpdatedBinding(
+        goalUpdatedQueue: Queue,
+        goalExchange: TopicExchange
+    ): Binding {
+        return BindingBuilder.bind(goalUpdatedQueue).to(goalExchange).with(RabbitMQService.GOAL_UPDATED_ROUTING_KEY)
+    }
+
+    /**
+     * Creates a binding between the goal achieved queue and the goal exchange.
+     *
+     * @param goalAchievedQueue The goal achieved queue
+     * @param goalExchange The goal exchange
+     * @return The binding
+     */
+    @Bean
+    fun goalAchievedBinding(
+        goalAchievedQueue: Queue,
+        goalExchange: TopicExchange
+    ): Binding {
+        return BindingBuilder.bind(goalAchievedQueue).to(goalExchange).with(RabbitMQService.GOAL_ACHIEVED_ROUTING_KEY)
+    }
+
+    /**
+     * Creates a binding between the goal failed queue and the goal exchange.
+     *
+     * @param goalFailedQueue The goal failed queue
+     * @param goalExchange The goal exchange
+     * @return The binding
+     */
+    @Bean
+    fun goalFailedBinding(
+        goalFailedQueue: Queue,
+        goalExchange: TopicExchange
+    ): Binding {
+        return BindingBuilder.bind(goalFailedQueue).to(goalExchange).with(RabbitMQService.GOAL_FAILED_ROUTING_KEY)
+    }
+
+    /**
      * Creates a Jackson2JsonMessageConverter for converting objects to JSON.
      *
      * @return The message converter
