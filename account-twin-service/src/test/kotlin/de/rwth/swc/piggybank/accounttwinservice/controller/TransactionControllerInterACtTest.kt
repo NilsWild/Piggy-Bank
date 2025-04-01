@@ -149,14 +149,14 @@ class TransactionControllerInterACtTest {
                     mapOf(),
                     mapOf(),
                     TransactionRequest(
-                        id = UUID.randomUUID(),
-                        transferId = UUID.randomUUID(),
+                        id = UUID.fromString("00000000-0000-0000-0000-000000000001"),
+                        transferId = UUID.fromString("00000000-0000-0000-0000-000000000002"),
                         affectedAccountId = "account-123",
                         amount = AmountDto(
                             value = BigDecimal("100.00"),
                             currencyCode = "EUR"
                         ),
-                        valuationTimestamp = Instant.now(),
+                        valuationTimestamp = Instant.parse("2023-01-05T12:00:00Z"),
                         purpose = "Test transaction",
                         type = "CREDIT",
                         sourceAccount = "source-account-123",
@@ -164,6 +164,27 @@ class TransactionControllerInterACtTest {
                     )
                 )
             ),
+            Arguments.of(
+                RestMessage.Request(
+                    "/api/transactions",
+                    mapOf("X-Request-ID" to "transaction-request-id"),
+                    mapOf(),
+                    TransactionRequest(
+                        id = UUID.fromString("00000000-0000-0000-0000-000000000003"),
+                        transferId = UUID.fromString("00000000-0000-0000-0000-000000000004"),
+                        affectedAccountId = "account-456",
+                        amount = AmountDto(
+                            value = BigDecimal("250.50"),
+                            currencyCode = "USD"
+                        ),
+                        valuationTimestamp = Instant.parse("2023-01-06T12:00:00Z"),
+                        purpose = "International payment",
+                        type = "DEBIT",
+                        sourceAccount = "account-456",
+                        destinationAccount = "destination-account-456"
+                    )
+                )
+            )
         )
     }
 }

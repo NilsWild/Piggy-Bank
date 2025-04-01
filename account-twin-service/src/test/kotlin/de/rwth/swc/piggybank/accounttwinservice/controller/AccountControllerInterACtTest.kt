@@ -144,6 +144,30 @@ class AccountControllerInterACtTest {
                     true,
                     HttpStatus.CREATED.value()
                 )
+            ),
+            Arguments.of(
+                // Request stimulus
+                RestMessage.Request(
+                    "/api/accounts",
+                    mapOf("X-Request-ID" to "create-account-request"),
+                    mapOf(),
+                    AccountRequest(
+                        type = "PayPal",
+                        identifier = "user@example.com",
+                        initialBalance = AmountDto(
+                            value = BigDecimal("500.50"),
+                            currencyCode = "USD"
+                        )
+                    )
+                ),
+                // Mocked Transfer Gateway response
+                RestMessage.Response(
+                    "/api/accounts",
+                    mapOf("Content-Type" to MediaType.APPLICATION_JSON_VALUE),
+                    mapOf(),
+                    true,
+                    HttpStatus.CREATED.value()
+                )
             )
         )
     }

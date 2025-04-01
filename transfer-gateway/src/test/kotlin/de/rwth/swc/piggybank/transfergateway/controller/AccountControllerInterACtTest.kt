@@ -170,6 +170,14 @@ class AccountControllerInterACtTest {
                     mapOf(),
                     null
                 )
+            ),
+            Arguments.of(
+                RestMessage.Request<Void>(
+                    "/api/monitored-accounts",
+                    mapOf("Accept" to "application/json", "X-Request-ID" to "test-request-id"),
+                    mapOf("filter" to "active"),
+                    null
+                )
             )
         )
     }
@@ -189,6 +197,19 @@ class AccountControllerInterACtTest {
                     )
                 )
             ),
+            Arguments.of(
+                RestMessage.Request(
+                    "/api/monitored-accounts",
+                    mapOf("Content-Type" to "application/json"),
+                    mapOf(),
+                    AccountRequest(
+                        account = Account(
+                            type = "PayPal",
+                            identifier = "user@example.com"
+                        )
+                    )
+                )
+            )
         )
     }
 
@@ -207,6 +228,19 @@ class AccountControllerInterACtTest {
                     )
                 )
             ),
+            Arguments.of(
+                RestMessage.Request(
+                    "/api/monitored-accounts",
+                    mapOf("X-Request-ID" to "delete-request-id"),
+                    mapOf(),
+                    AccountRequest(
+                        account = Account(
+                            type = "CreditCard",
+                            identifier = "1234-5678-9012-3456"
+                        )
+                    )
+                )
+            )
         )
     }
 }

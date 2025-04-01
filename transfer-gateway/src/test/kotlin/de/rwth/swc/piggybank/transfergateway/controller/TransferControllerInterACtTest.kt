@@ -76,7 +76,7 @@ class TransferControllerInterACtTest {
         transactionResponse: RestMessage.Response<String>
     ) {
         val transferRequest = requestStimulus.body!!
-        
+
         // Add the source account to the monitored accounts
         accountService.addMonitoredAccount(transferRequest.sourceAccount)
 
@@ -91,7 +91,7 @@ class TransferControllerInterACtTest {
         response shouldNotBe null
         response!!.statusCode shouldBe HttpStatus.CREATED
     }
-    
+
     @InterACtTest
     @MethodSource("handleTransferRequests")
     fun `should handle transfer request when target account is monitored`(
@@ -99,7 +99,7 @@ class TransferControllerInterACtTest {
         transactionResponse: RestMessage.Response<String>
     ) {
         val transferRequest = requestStimulus.body!!
-        
+
         // Add the target account to the monitored accounts
         accountService.addMonitoredAccount(transferRequest.targetAccount)
 
@@ -109,31 +109,31 @@ class TransferControllerInterACtTest {
         // Send the request and get the response
         val response = testClient.prepare(HttpMethod.POST, requestStimulus)
             .exchangeToMono { response -> response.toEntity(String::class.java) }.block()
-        
+
         // Verify the response
         response shouldNotBe null
         response!!.statusCode shouldBe HttpStatus.CREATED
     }
-    
+
     @InterACtTest
     @MethodSource("handleTransferRequests")
     fun `should handle transfer request when neither account is monitored`(requestStimulus: RestMessage.Request<TransferRequest>) {
         // Send the request and get the response
         val response = testClient.prepare(HttpMethod.POST, requestStimulus)
             .exchangeToMono { response -> response.toEntity(String::class.java) }.block()
-        
+
         // Verify the response
         response shouldNotBe null
         response!!.statusCode shouldBe HttpStatus.CREATED
     }
-    
+
     @InterACtTest
     @MethodSource("invalidTransferRequests")
     fun `should return bad request for invalid transfer request`(requestStimulus: RestMessage.Request<String>) {
         // Send the request and get the response
         val response = testClient.prepare(HttpMethod.POST, requestStimulus)
             .exchangeToMono { response -> response.toEntity(String::class.java) }.block()
-        
+
         // Verify the response
         response shouldNotBe null
         response!!.statusCode shouldBe HttpStatus.BAD_REQUEST
@@ -150,8 +150,29 @@ class TransferControllerInterACtTest {
                         sourceAccount = Account("BankAccount", "DE123456789"),
                         targetAccount = Account("PayPal", "user@example.com"),
                         amount = Amount(BigDecimal("100.00"), "EUR"),
-                        valuationTimestamp = Instant.now(),
+                        valuationTimestamp = Instant.parse("2023-01-01T12:00:00Z"),
                         purpose = "Test transfer"
+                    )
+                ),
+                RestMessage.Response(
+                    "/api/transactions",
+                    mapOf(),
+                    mapOf(),
+                    "",
+                    201
+                )
+            ),
+            Arguments.of(
+                RestMessage.Request(
+                    "/api/transfers",
+                    mapOf("X-Request-ID" to "test-request-id"),
+                    mapOf(),
+                    TransferRequest(
+                        sourceAccount = Account("CreditCard", "1234-5678-9012-3456"),
+                        targetAccount = Account("BankAccount", "GB98MIDL07009312345678"),
+                        amount = Amount(BigDecimal("250.50"), "USD"),
+                        valuationTimestamp = Instant.parse("2023-01-02T12:00:00Z"),
+                        purpose = "International transfer"
                     )
                 ),
                 RestMessage.Response(
@@ -164,7 +185,7 @@ class TransferControllerInterACtTest {
             )
         )
     }
-    
+
     fun invalidTransferRequests(): Stream<Arguments> {
         return Stream.of(
             Arguments.of(
@@ -186,8 +207,33 @@ class TransferControllerInterACtTest {
                             "value": -100.00,
                             "currencyCode": "EUR"
                         },
-                        "valuationTimestamp": "${Instant.now()}",
+                        "valuationTimestamp": "2023-01-03T12:00:00Z",
                         "purpose": "Test transfer"
+                    }
+                    """.trimIndent()
+                )
+            ),
+            Arguments.of(
+                RestMessage.Request(
+                    "/api/transfers",
+                    mapOf(),
+                    mapOf("Content-Type" to "application/json"),
+                    """
+                    {
+                        "sourceAccount": {
+                            "type": "BankAccount",
+                            "identifier": "DE123456789"
+                        },
+                        "targetAccount": {
+                            "type": "BankAccount",
+                            "identifier": "DE123456789"
+                        },
+                        "amount": {
+                            "value": 100.00,
+                            "currencyCode": ""
+                        },
+                        "valuationTimestamp": "2023-01-04T12:00:00Z",
+                        "purpose": "Invalid currency"
                     }
                     """.trimIndent()
                 )
