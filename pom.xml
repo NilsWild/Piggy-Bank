@@ -20,6 +20,7 @@
         <module>transfer-gateway</module>
         <module>account-twin-service</module>
         <module>notification-service</module>
+        <module>transfer-classifier</module>
     </modules>
 
     <properties>
