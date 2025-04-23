@@ -183,6 +183,23 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+            <id>non-interact-tests</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <excludes>
+                                <exclude>**/*InterACtTest.java</exclude>
+                                <exclude>**/*InterACtTest.kt</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 
     <repositories>

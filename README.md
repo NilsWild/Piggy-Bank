@@ -71,6 +71,16 @@ mvn test -P interact-tests
 
 This command uses the `interact-tests` Maven profile, which configures the Surefire plugin to only run test classes with names ending in 'InterACtTest'. These tests verify the interactions between microservices using the InterACt framework.
 
+#### Running All Tests Except InterACtTests
+
+To run all tests except InterACtTests across all modules:
+
+```bash
+mvn test -P non-interact-tests
+```
+
+This command uses the `non-interact-tests` Maven profile, which configures the Surefire plugin to exclude test classes with names ending in 'InterACtTest'. This is useful when you want to run only the unit and integration tests without the InterACt tests.
+
 ### Running the Services
 
 #### Backend Services
