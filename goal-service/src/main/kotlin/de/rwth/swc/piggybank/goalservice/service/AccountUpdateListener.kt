@@ -42,26 +42,33 @@ class AccountUpdateListener(
             val transactionType = event.transactionType
             val transactionPurpose = event.transactionPurpose
             val transactionId = UUID.fromString(event.transactionId)
+            val transferId = UUID.fromString(event.transferId)
 
             // Store transfer information in the cache for later use by the ClassificationListener
             transferClassificationCache.storeTransferInfo(
-                transferId = transactionId,
+                transferId = transferId,
                 accountId = accountId,
                 amount = event.transactionAmount.value,
                 type = transactionType,
                 purpose = transactionPurpose
             )
 
+            // Map the transaction ID to the transfer ID for correlation
+            transferClassificationCache.mapTransactionToTransfer(transactionId, transferId)
+
             // Find all active goals for the account
             val activeGoals = goalRepository.findByAccountIdAndStatus(accountId, GoalStatus.ACTIVE)
             logger.info("Found {} active goals for account {}", activeGoals.size, accountId)
 
+            // Check if classifications are available for this transfer
+            val classifications = transferClassificationCache.getClassifications(transferId) ?: emptyList()
+            val hasClassifications = classifications.isNotEmpty()
+
             // Process the transaction for each goal
-            // Only process goals that don't require classifications (e.g., SavingsGoal)
-            // SpendingLimitGoal will be processed by the ClassificationListener
             val updatedGoals = activeGoals.filter { goal ->
-                // Skip SpendingLimitGoal as they require classifications
-                if (goal is SpendingLimitGoal) {
+                // Skip SpendingLimitGoal if classifications are not available
+                if (goal is SpendingLimitGoal && !hasClassifications) {
+                    logger.info("Skipping SpendingLimitGoal {} as classifications are not available yet", goal.id)
                     false
                 } else {
                     // Process the account update and check if the goal's status changed
@@ -70,7 +77,7 @@ class AccountUpdateListener(
                         transactionAmount = transactionAmount,
                         transactionType = transactionType,
                         transactionPurpose = transactionPurpose,
-                        classifications = emptyList() // Classifications will be added by the ClassificationListener
+                        classifications = classifications
                     )
                 }
             }
@@ -84,6 +91,12 @@ class AccountUpdateListener(
                 updatedGoals.forEach { goal ->
                     rabbitMQService.sendGoalStatusEvent(goal)
                 }
+            }
+
+            // If we processed all goals (including SpendingLimitGoal), we can remove the transfer information from the cache
+            if (hasClassifications || activeGoals.none { it is SpendingLimitGoal }) {
+                transferClassificationCache.removeTransferInfo(transferId)
+                logger.info("Removed transfer information from cache for transfer ID: {}", transferId)
             }
         } catch (e: Exception) {
             logger.error("Error processing account updated event", e)

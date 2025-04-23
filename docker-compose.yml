@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   transfer-gateway:
     build:
@@ -91,6 +89,24 @@ services:
     networks:
       - piggybank-network
 
+  transfer-classifier:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE_NAME: transfer-classifier
+    ports:
+      - "8084:8082"
+    environment:
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+    depends_on:
+      - rabbitmq
+    networks:
+      - piggybank-network
+
   piggybank-ui:
     build:
       context: .
@@ -102,6 +118,7 @@ services:
       - account-twin-service
       - notification-service
       - goal-service
+      - transfer-classifier
     networks:
       - piggybank-network
 

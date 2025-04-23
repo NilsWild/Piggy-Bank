@@ -47,7 +47,11 @@ class RabbitMQService(
             val accountId = event["accountId"] as String
             val transactionType = event["transactionType"] as String
             val transactionAmount = event["transactionAmount"] as Map<String, Any>
-            val value = transactionAmount["value"] as Number
+            val value = when (val rawValue = transactionAmount["value"]) {
+                is Number -> rawValue
+                is String -> rawValue.toDouble()
+                else -> throw IllegalArgumentException("Transaction amount value must be a Number or String")
+            }
             val currencyCode = transactionAmount["currencyCode"] as String
             val purpose = event["transactionPurpose"] as String
             val sourceAccount = event["sourceAccount"] as? String
@@ -105,8 +109,7 @@ class RabbitMQService(
             notificationService.processGoalAchievedEvent(
                 accountId = event.accountId,
                 goalId = event.goalId,
-                goalName = event.goalName,
-                goalType = event.goalType
+                goalName = event.goalName
             )
         } catch (e: Exception) {
             logger.error("Failed to process goal achieved event", e)
@@ -126,8 +129,7 @@ class RabbitMQService(
             notificationService.processGoalFailedEvent(
                 accountId = event.accountId,
                 goalId = event.goalId,
-                goalName = event.goalName,
-                goalType = event.goalType
+                goalName = event.goalName
             )
         } catch (e: Exception) {
             logger.error("Failed to process goal failed event", e)

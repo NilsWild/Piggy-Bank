@@ -1,10 +1,10 @@
 package de.rwth.swc.piggybank.notificationservice.controller
 
 import de.rwth.swc.piggybank.notificationservice.dto.NotificationResponse
-import de.rwth.swc.piggybank.notificationservice.dto.PageResponse
 import de.rwth.swc.piggybank.notificationservice.dto.UnreadNotificationCount
 import de.rwth.swc.piggybank.notificationservice.service.NotificationService
 import org.slf4j.LoggerFactory
+import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.http.ResponseEntity
@@ -35,11 +35,11 @@ class NotificationController(private val notificationService: NotificationServic
     fun getAllNotifications(
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "10") size: Int
-    ): ResponseEntity<PageResponse<NotificationResponse>> {
+    ): ResponseEntity<Page<NotificationResponse>> {
         logger.info("Getting all notifications, page: {}, size: {}", page, size)
         val pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"))
         val notifications = notificationService.getAllNotifications(pageable)
-        return ResponseEntity.ok(PageResponse.fromPage(notifications, NotificationResponse::fromDomain))
+        return ResponseEntity.ok(notifications.map(NotificationResponse::fromDomain))
     }
 
     /**
@@ -55,11 +55,11 @@ class NotificationController(private val notificationService: NotificationServic
         @PathVariable accountId: String,
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "10") size: Int
-    ): ResponseEntity<PageResponse<NotificationResponse>> {
+    ): ResponseEntity<Page<NotificationResponse>> {
         logger.info("Getting notifications for account: {}, page: {}, size: {}", accountId, page, size)
         val pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"))
         val notifications = notificationService.getAccountNotifications(accountId, pageable)
-        return ResponseEntity.ok(PageResponse.fromPage(notifications, NotificationResponse::fromDomain))
+        return ResponseEntity.ok(notifications.map(NotificationResponse::fromDomain))
     }
 
     /**
@@ -73,11 +73,11 @@ class NotificationController(private val notificationService: NotificationServic
     fun getUnreadNotifications(
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "10") size: Int
-    ): ResponseEntity<PageResponse<NotificationResponse>> {
+    ): ResponseEntity<Page<NotificationResponse>> {
         logger.info("Getting unread notifications, page: {}, size: {}", page, size)
         val pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"))
         val notifications = notificationService.getUnreadNotifications(pageable)
-        return ResponseEntity.ok(PageResponse.fromPage(notifications, NotificationResponse::fromDomain))
+        return ResponseEntity.ok(notifications.map(NotificationResponse::fromDomain))
     }
 
     /**
@@ -93,11 +93,11 @@ class NotificationController(private val notificationService: NotificationServic
         @PathVariable accountId: String,
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "10") size: Int
-    ): ResponseEntity<PageResponse<NotificationResponse>> {
+    ): ResponseEntity<Page<NotificationResponse>> {
         logger.info("Getting unread notifications for account: {}, page: {}, size: {}", accountId, page, size)
         val pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"))
         val notifications = notificationService.getUnreadNotificationsForAccount(accountId, pageable)
-        return ResponseEntity.ok(PageResponse.fromPage(notifications, NotificationResponse::fromDomain))
+        return ResponseEntity.ok(notifications.map(NotificationResponse::fromDomain))
     }
 
     /**

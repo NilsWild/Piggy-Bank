@@ -15,7 +15,6 @@ import java.time.LocalDateTime
  * @property currentAmount The current amount saved
  */
 @Entity
-@DiscriminatorValue("SAVINGS")
 class SavingsGoal(
     name: String,
     description: String? = null,

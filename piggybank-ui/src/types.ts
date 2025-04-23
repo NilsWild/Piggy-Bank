@@ -95,7 +95,10 @@ export interface TransferRequest {
 export enum NotificationEventType {
   BALANCE_UPDATE = 'BALANCE_UPDATE',
   ACCOUNT_CREATED = 'ACCOUNT_CREATED',
-  ACCOUNT_DELETED = 'ACCOUNT_DELETED'
+  ACCOUNT_DELETED = 'ACCOUNT_DELETED',
+  GOAL_UPDATE = 'GOAL_UPDATE',
+  GOAL_ACHIEVED = 'GOAL_ACHIEVED',
+  GOAL_FAILED = 'GOAL_FAILED'
 }
 
 export interface NotificationSubscription {
@@ -147,4 +150,60 @@ export interface PageResponse<T> {
 
 export interface UnreadNotificationCount {
   count: number;
+}
+
+// Goal types
+export enum GoalType {
+  SPENDING_LIMIT = 'SPENDING_LIMIT',
+  SAVINGS = 'SAVINGS'
+}
+
+export enum GoalStatus {
+  ACTIVE = 'ACTIVE',
+  ACHIEVED = 'ACHIEVED',
+  FAILED = 'FAILED',
+  CANCELLED = 'CANCELLED'
+}
+
+export interface Goal {
+  id: string;
+  name: string;
+  description?: string;
+  type: GoalType;
+  status: GoalStatus;
+  startDate: string;
+  endDate: string;
+  accountId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SavingsGoal extends Goal {
+  targetAmount: Amount;
+  currentAmount: Amount;
+}
+
+export interface SpendingLimitGoal extends Goal {
+  limit: Amount;
+  category: string;
+  currentSpending: Amount;
+}
+
+export interface CreateSavingsGoalRequest {
+  name: string;
+  description?: string;
+  startDate: string;
+  endDate: string;
+  accountId: string;
+  targetAmount: Amount;
+}
+
+export interface CreateSpendingLimitGoalRequest {
+  name: string;
+  description?: string;
+  startDate: string;
+  endDate: string;
+  accountId: string;
+  limit: Amount;
+  category: string;
 }

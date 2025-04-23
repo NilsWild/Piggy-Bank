@@ -21,6 +21,7 @@
 #   - transfer-gateway: Spring Boot service for transfer operations
 #   - account-twin-service: Spring Boot service for account management
 #   - notification-service: Spring Boot service for user notifications
+#   - goal-service: Spring Boot service for goal management
 #   - piggybank-ui: Frontend UI service
 #   - rabbitmq: Message broker (always uses the pre-built image)
 
@@ -61,7 +62,7 @@ fi
 # Handle clean option
 if [[ "$CLEAN_TIMESTAMPS" == "true" ]]; then
   echo "Removing timestamp files to force rebuild on next run..."
-  rm -f .transfer-gateway_last_build .account-twin-service_last_build .notification-service_last_build .piggybank-ui_last_build
+  rm -f .transfer-gateway_last_build .account-twin-service_last_build .notification-service_last_build .goal-service_last_build .transfer-classifier_last_build .piggybank-ui_last_build
   echo "Timestamp files removed. Run the script again without --clean to start services."
   exit 0
 fi
@@ -78,16 +79,16 @@ if ! docker info > /dev/null 2>&1; then
   exit 1
 fi
 
-# Check if docker-compose is available
-if ! command -v docker-compose > /dev/null 2>&1; then
-  echo "Error: docker-compose is not installed."
-  echo "Please install docker-compose and try again."
+# Check if docker compose is available
+if ! docker compose version > /dev/null 2>&1; then
+  echo "Error: docker compose is not available."
+  echo "Please ensure Docker is installed with Docker Compose V2 support."
   exit 1
 fi
 
 if [[ "$FORCE_REBUILD" == "true" ]]; then
   echo "Force rebuild requested, will rebuild all services."
-  rebuild_services="transfer-gateway account-twin-service notification-service piggybank-ui"
+  rebuild_services="transfer-gateway account-twin-service notification-service goal-service transfer-classifier piggybank-ui"
 else
   echo "Checking for changes in services..."
 
@@ -121,7 +122,7 @@ else
 
   # Determine which services need to be rebuilt
   rebuild_services=""
-  for service in transfer-gateway account-twin-service notification-service piggybank-ui; do
+  for service in transfer-gateway account-twin-service notification-service goal-service transfer-classifier piggybank-ui; do
     if [[ $(needs_rebuild $service) == "true" ]]; then
       echo "Changes detected in $service, will rebuild."
       rebuild_services="$rebuild_services $service"
@@ -137,26 +138,26 @@ echo "This may take a few minutes for the first run as images need to be built."
 if [[ -z "$rebuild_services" ]]; then
   # No services need to be rebuilt, just start them
   echo "No changes detected, starting services without rebuilding."
-  docker-compose up -d
+  docker compose up -d
 else
   # Start all services, but only rebuild the ones that have changed
   echo "Rebuilding services: $rebuild_services"
   # First, build the services that need to be rebuilt
   for service in $rebuild_services; do
-    docker-compose build $service
+    docker compose build $service
     # Update timestamp files for rebuilt services
     echo "Updating timestamp for $service"
         date +%s > ".${service}_last_build"
   done
   # Then start all services
-  docker-compose up -d
+  docker compose up -d
 fi
 
 # Display status
 echo "====================================================="
 echo "  PiggyBank Services Status"
 echo "====================================================="
-docker-compose ps
+docker compose ps
 
 echo ""
 echo "Services are now running!"
@@ -166,7 +167,9 @@ echo "- PiggyBank UI: http://localhost:3000"
 echo "- Account Twin Service API: http://localhost:8081"
 echo "- Transfer Gateway API: http://localhost:8080"
 echo "- Notification Service API: http://localhost:8082"
+echo "- Goal Service API: http://localhost:8083"
+echo "- Transfer Classifier Service API: http://localhost:8084"
 echo "- RabbitMQ Management UI: http://localhost:15672 (guest/guest)"
 echo ""
-echo "To stop all services, run: docker-compose down"
+echo "To stop all services, run: docker compose down"
 echo "====================================================="

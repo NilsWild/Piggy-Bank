@@ -134,8 +134,7 @@ class NotificationServiceTest {
         notificationService.processGoalAchievedEvent(
             accountId = accountId,
             goalId = goalId,
-            goalName = "Test Goal",
-            goalType = "SPENDING_LIMIT"
+            goalName = "Test Goal"
         )
 
         // Then
@@ -169,8 +168,7 @@ class NotificationServiceTest {
         notificationService.processGoalAchievedEvent(
             accountId = accountId,
             goalId = goalId,
-            goalName = "Test Goal",
-            goalType = "SPENDING_LIMIT"
+            goalName = "Test Goal"
         )
 
         // Then
@@ -204,8 +202,7 @@ class NotificationServiceTest {
         notificationService.processGoalFailedEvent(
             accountId = accountId,
             goalId = goalId,
-            goalName = "Test Goal",
-            goalType = "SPENDING_LIMIT"
+            goalName = "Test Goal"
         )
 
         // Then
@@ -239,8 +236,7 @@ class NotificationServiceTest {
         notificationService.processGoalFailedEvent(
             accountId = accountId,
             goalId = goalId,
-            goalName = "Test Goal",
-            goalType = "SPENDING_LIMIT"
+            goalName = "Test Goal"
         )
 
         // Then

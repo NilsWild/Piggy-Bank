@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.util.UUID
 
 /**
@@ -261,7 +262,7 @@ class NotificationService(
 
         // Calculate progress percentage
         val progressPercentage = if (target > BigDecimal.ZERO) {
-            progress.multiply(BigDecimal(100)).divide(target, 0, BigDecimal.ROUND_HALF_UP)
+            progress.multiply(BigDecimal(100)).divide(target, 0, RoundingMode.HALF_UP)
         } else {
             BigDecimal.ZERO
         }
@@ -289,14 +290,12 @@ class NotificationService(
      * @param accountId The identifier of the account
      * @param goalId The identifier of the goal
      * @param goalName The name of the goal
-     * @param goalType The type of the goal
      */
     @Transactional
     fun processGoalAchievedEvent(
         accountId: String,
         goalId: UUID,
-        goalName: String,
-        goalType: String
+        goalName: String
     ) {
         logger.info("Processing goal achieved event for account: {}, goal: {}", accountId, goalId)
 
@@ -334,14 +333,12 @@ class NotificationService(
      * @param accountId The identifier of the account
      * @param goalId The identifier of the goal
      * @param goalName The name of the goal
-     * @param goalType The type of the goal
      */
     @Transactional
     fun processGoalFailedEvent(
         accountId: String,
         goalId: UUID,
-        goalName: String,
-        goalType: String
+        goalName: String
     ) {
         logger.info("Processing goal failed event for account: {}, goal: {}", accountId, goalId)
 

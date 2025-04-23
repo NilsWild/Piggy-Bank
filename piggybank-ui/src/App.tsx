@@ -5,6 +5,7 @@ import HomePage from './pages/HomePage';
 import AccountsPage from './pages/AccountsPage';
 import AccountDetailPage from './pages/AccountDetailPage';
 import TransfersPage from './pages/TransfersPage';
+import GoalsPage from './pages/GoalsPage';
 import NotificationsPage from './pages/NotificationsPage';
 import NotFoundPage from './pages/NotFoundPage';
 
@@ -17,6 +18,7 @@ function App() {
           <Route path="accounts" element={<AccountsPage />} />
           <Route path="accounts/:accountId" element={<AccountDetailPage />} />
           <Route path="transfers" element={<TransfersPage />} />
+          <Route path="goals" element={<GoalsPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>

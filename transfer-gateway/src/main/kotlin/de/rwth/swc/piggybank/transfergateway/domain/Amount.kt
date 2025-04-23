@@ -17,7 +17,6 @@ data class Amount(
     val currencyCode: String
 ) : Serializable {
     init {
-        require(value != null) { "Amount value cannot be null" }
         require(currencyCode.isNotBlank()) { "Currency code cannot be blank" }
         // Validate that the currency code is valid
         Currency.getInstance(currencyCode)

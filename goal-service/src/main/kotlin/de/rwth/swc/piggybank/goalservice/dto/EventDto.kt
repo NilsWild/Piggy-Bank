@@ -19,6 +19,7 @@ data class AccountUpdatedEvent(
     val value: String,
     val currencyCode: String,
     val transactionId: String,
+    val transferId: String,
     val transactionAmount: TransactionAmountDto,
     val transactionType: String,
     val transactionPurpose: String

@@ -43,41 +43,6 @@ data class NotificationResponse(
     }
 }
 
-/**
- * Data Transfer Object for pagination information.
- *
- * @property content The content of the page
- * @property totalElements The total number of elements
- * @property totalPages The total number of pages
- * @property size The size of the page
- * @property number The page number
- */
-data class PageResponse<T>(
-    val content: List<T>,
-    val totalElements: Long,
-    val totalPages: Int,
-    val size: Int,
-    val number: Int
-) {
-    companion object {
-        /**
-         * Creates a PageResponse from a Spring Data Page.
-         *
-         * @param page The Spring Data Page
-         * @param mapper A function to map the page content to the desired type
-         * @return The PageResponse
-         */
-        fun <T, R> fromPage(page: org.springframework.data.domain.Page<T>, mapper: (T) -> R): PageResponse<R> {
-            return PageResponse(
-                content = page.content.map(mapper),
-                totalElements = page.totalElements,
-                totalPages = page.totalPages,
-                size = page.size,
-                number = page.number
-            )
-        }
-    }
-}
 
 /**
  * Data Transfer Object for unread notification count.

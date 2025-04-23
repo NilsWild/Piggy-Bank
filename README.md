@@ -188,8 +188,8 @@ PiggyBank/
 │   ├── pom.xml              # Service POM
 │   ├── README.md            # Service documentation
 │   └── src/                 # Service source code
-├── goal-service/            # GoalService (to be implemented)
-└── transfer-classifier/     # TransferClassifier (to be implemented)
+├── goal-service/            # GoalService
+└── transfer-classifier/     # TransferClassifier
 ```
 
 ## Documentation
@@ -200,8 +200,8 @@ Each service has its own README.md file with detailed documentation:
 - [TransferGateway](transfer-gateway/README.md)
 - [AccountTwinService](account-twin-service/README.md)
 - [NotificationService](notification-service/README.md)
-- GoalService (to be implemented)
-- TransferClassifier (to be implemented)
+- [GoalService](goal-service/README.md)
+- [TransferClassifier](transfer-classifier/README.md)
 
 ## Development Guidelines
 

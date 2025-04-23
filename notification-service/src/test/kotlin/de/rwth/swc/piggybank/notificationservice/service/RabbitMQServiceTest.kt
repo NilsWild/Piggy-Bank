@@ -89,8 +89,7 @@ class RabbitMQServiceTest {
             notificationService.processGoalAchievedEvent(
                 accountId = accountId,
                 goalId = goalId,
-                goalName = "Test Goal",
-                goalType = "SPENDING_LIMIT"
+                goalName = "Test Goal"
             )
         }
     }
@@ -116,8 +115,7 @@ class RabbitMQServiceTest {
             notificationService.processGoalFailedEvent(
                 accountId = accountId,
                 goalId = goalId,
-                goalName = "Test Goal",
-                goalType = "SPENDING_LIMIT"
+                goalName = "Test Goal"
             )
         }
     }
@@ -207,6 +205,72 @@ class RabbitMQServiceTest {
         // When/Then
         assertThrows<RuntimeException> {
             rabbitMQService.sendNotification(notification)
+        }
+    }
+
+    @Test
+    fun `should handle account updated event with Number value`() {
+        // Given
+        val event = mapOf(
+            "eventType" to "ACCOUNT_UPDATED",
+            "accountId" to accountId,
+            "transactionType" to "DEPOSIT",
+            "transactionAmount" to mapOf(
+                "value" to 100.0,
+                "currencyCode" to "EUR"
+            ),
+            "transactionPurpose" to "Test purpose",
+            "sourceAccount" to "source-account",
+            "destinationAccount" to "destination-account"
+        )
+
+        // When
+        rabbitMQService.handleAccountUpdatedEvent(event)
+
+        // Then
+        verify {
+            notificationService.processAccountUpdatedEvent(
+                accountId = accountId,
+                transactionType = "DEPOSIT",
+                amount = 100.0,
+                currencyCode = "EUR",
+                purpose = "Test purpose",
+                sourceAccount = "source-account",
+                destinationAccount = "destination-account"
+            )
+        }
+    }
+
+    @Test
+    fun `should handle account updated event with String value`() {
+        // Given
+        val event = mapOf(
+            "eventType" to "ACCOUNT_UPDATED",
+            "accountId" to accountId,
+            "transactionType" to "DEPOSIT",
+            "transactionAmount" to mapOf(
+                "value" to "100.0",
+                "currencyCode" to "EUR"
+            ),
+            "transactionPurpose" to "Test purpose",
+            "sourceAccount" to "source-account",
+            "destinationAccount" to "destination-account"
+        )
+
+        // When
+        rabbitMQService.handleAccountUpdatedEvent(event)
+
+        // Then
+        verify {
+            notificationService.processAccountUpdatedEvent(
+                accountId = accountId,
+                transactionType = "DEPOSIT",
+                amount = 100.0,
+                currencyCode = "EUR",
+                purpose = "Test purpose",
+                sourceAccount = "source-account",
+                destinationAccount = "destination-account"
+            )
         }
     }
 

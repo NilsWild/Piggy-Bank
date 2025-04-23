@@ -62,8 +62,7 @@ enum class GoalType {
  */
 @Entity
 @Table(name = "goals")
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "goal_type", discriminatorType = DiscriminatorType.STRING)
+@Inheritance(strategy = InheritanceType.JOINED)
 abstract class Goal(
     @Id
     val id: UUID = UUID.randomUUID(),

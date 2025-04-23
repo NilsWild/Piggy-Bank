@@ -17,7 +17,6 @@ import java.time.LocalDateTime
  * @property currentSpending The current amount spent in the category
  */
 @Entity
-@DiscriminatorValue("SPENDING_LIMIT")
 class SpendingLimitGoal(
     name: String,
     description: String? = null,
@@ -69,8 +68,8 @@ class SpendingLimitGoal(
 
         // Check if the transaction is relevant to this goal (matches the category)
         if (classifications.contains(category)) {
-            // Only count outgoing transactions (negative amounts)
-            if (transactionAmount < BigDecimal.ZERO) {
+            // Only count outgoing transactions (DEBIT type)
+            if (transactionType == "DEBIT") {
                 // Add the absolute value of the transaction amount to the current spending
                 currentSpending = currentSpending.add(transactionAmount.abs())
                 updatedAt = LocalDateTime.now()

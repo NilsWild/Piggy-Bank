@@ -37,6 +37,8 @@ class ClassificationListenerTest {
         )
 
         // Setup default behavior for the cache
+        every { transferClassificationCache.storeClassifications(any(), any()) } returns Unit
+        every { transferClassificationCache.hasTransferInfo(transferId) } returns true
         every { transferClassificationCache.getAccountId(transferId) } returns accountId
         every { transferClassificationCache.getAmount(transferId) } returns "-50.00"
         every { transferClassificationCache.getType(transferId) } returns "DEBIT"
@@ -66,6 +68,8 @@ class ClassificationListenerTest {
         classificationListener.handleClassificationEvent(event)
 
         // Then
+        verify { transferClassificationCache.storeClassifications(transferId, listOf("Grocery")) }
+        verify { transferClassificationCache.hasTransferInfo(transferId) }
         verify { transferClassificationCache.getAccountId(transferId) }
         verify { transferClassificationCache.getAmount(transferId) }
         verify { transferClassificationCache.getType(transferId) }
@@ -87,6 +91,8 @@ class ClassificationListenerTest {
         classificationListener.handleClassificationEvent(event)
 
         // Then
+        verify { transferClassificationCache.storeClassifications(transferId, listOf("Grocery")) }
+        verify { transferClassificationCache.hasTransferInfo(transferId) }
         verify { transferClassificationCache.getAccountId(transferId) }
         verify { transferClassificationCache.getAmount(transferId) }
         verify { transferClassificationCache.getType(transferId) }
@@ -122,6 +128,8 @@ class ClassificationListenerTest {
         classificationListener.handleClassificationEvent(event)
 
         // Then
+        verify { transferClassificationCache.storeClassifications(transferId, listOf("Grocery")) }
+        verify { transferClassificationCache.hasTransferInfo(transferId) }
         verify { transferClassificationCache.getAccountId(transferId) }
         verify { transferClassificationCache.getAmount(transferId) }
         verify { transferClassificationCache.getType(transferId) }
@@ -137,13 +145,15 @@ class ClassificationListenerTest {
     fun `should handle missing transfer information`() {
         // Given
         val event = createClassificationEvent()
-        every { transferClassificationCache.getAccountId(transferId) } returns null
+        every { transferClassificationCache.hasTransferInfo(transferId) } returns false
 
         // When
         classificationListener.handleClassificationEvent(event)
 
         // Then
-        verify { transferClassificationCache.getAccountId(transferId) }
+        verify { transferClassificationCache.storeClassifications(transferId, listOf("Grocery")) }
+        verify { transferClassificationCache.hasTransferInfo(transferId) }
+        verify(exactly = 0) { transferClassificationCache.getAccountId(transferId) }
         verify(exactly = 0) { goalRepository.findByAccountIdAndStatus(any(), any()) }
         verify(exactly = 0) { goalRepository.saveAll(any<List<SpendingLimitGoal>>()) }
         verify(exactly = 0) { rabbitMQService.sendGoalStatusEvent(any()) }
@@ -153,7 +163,7 @@ class ClassificationListenerTest {
     fun `should handle exceptions during event processing`() {
         // Given
         val event = createClassificationEvent()
-        every { goalRepository.findByAccountIdAndStatus(accountId, GoalStatus.ACTIVE) } throws RuntimeException("Test exception")
+        every { transferClassificationCache.storeClassifications(any(), any()) } throws RuntimeException("Test exception")
 
         // When/Then
         assertThrows<RuntimeException> {

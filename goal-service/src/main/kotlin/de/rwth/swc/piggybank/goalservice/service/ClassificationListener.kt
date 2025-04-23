@@ -2,6 +2,7 @@ package de.rwth.swc.piggybank.goalservice.service
 
 import de.rwth.swc.piggybank.goalservice.config.RabbitMQConfig
 import de.rwth.swc.piggybank.goalservice.domain.GoalStatus
+import de.rwth.swc.piggybank.goalservice.domain.SpendingLimitGoal
 import de.rwth.swc.piggybank.goalservice.dto.ClassificationEvent
 import de.rwth.swc.piggybank.goalservice.repository.GoalRepository
 import org.slf4j.LoggerFactory
@@ -37,6 +38,15 @@ class ClassificationListener(
             val transferId = event.transferId
             val classifications = event.classifications
 
+            // Store the classifications in the cache
+            transferClassificationCache.storeClassifications(transferId, classifications)
+
+            // Check if transfer information is available
+            if (!transferClassificationCache.hasTransferInfo(transferId)) {
+                logger.info("Transfer information not found in cache for transfer ID: {}. Storing classifications for later processing.", transferId)
+                return
+            }
+
             // Retrieve transfer information from the cache
             val accountId = transferClassificationCache.getAccountId(transferId)
             val amount = transferClassificationCache.getAmount(transferId)
@@ -44,7 +54,7 @@ class ClassificationListener(
             val purpose = transferClassificationCache.getPurpose(transferId)
 
             if (accountId == null || amount == null || type == null || purpose == null) {
-                logger.warn("Transfer information not found in cache for transfer ID: {}", transferId)
+                logger.warn("Transfer information incomplete in cache for transfer ID: {}", transferId)
                 return
             }
 
@@ -53,15 +63,21 @@ class ClassificationListener(
             logger.info("Found {} active goals for account {}", activeGoals.size, accountId)
 
             // Process the classification for each goal
+            // Only process SpendingLimitGoal goals, as other goals have already been processed by the AccountUpdateListener
             val updatedGoals = activeGoals.filter { goal ->
-                // Process the account update with classifications and check if the goal's status changed
-                goal.processAccountUpdate(
-                    accountId = accountId,
-                    transactionAmount = BigDecimal(amount),
-                    transactionType = type,
-                    transactionPurpose = purpose,
-                    classifications = classifications
-                )
+                if (goal is SpendingLimitGoal) {
+                    // Process the account update with classifications and check if the goal's status changed
+                    goal.processAccountUpdate(
+                        accountId = accountId,
+                        transactionAmount = BigDecimal(amount),
+                        transactionType = type,
+                        transactionPurpose = purpose,
+                        classifications = classifications
+                    )
+                } else {
+                    // Skip non-SpendingLimitGoal goals as they have already been processed by the AccountUpdateListener
+                    false
+                }
             }
 
             // Save the updated goals

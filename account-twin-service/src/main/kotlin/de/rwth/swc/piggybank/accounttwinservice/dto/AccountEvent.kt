@@ -75,6 +75,7 @@ data class AccountUpdatedEvent(
     val value: String,
     val currencyCode: String,
     val transactionId: String,
+    val transferId: String,
     val transactionAmount: TransactionAmountDto,
     val transactionType: String,
     val transactionPurpose: String
@@ -95,6 +96,7 @@ data class AccountUpdatedEvent(
                 value = account.balance.value.toString(),
                 currencyCode = account.balance.currencyCode,
                 transactionId = transaction.id.toString(),
+                transferId = transaction.transferId.toString(),
                 transactionAmount = TransactionAmountDto(
                     value = transaction.amount.value.toString(),
                     currencyCode = transaction.amount.currencyCode

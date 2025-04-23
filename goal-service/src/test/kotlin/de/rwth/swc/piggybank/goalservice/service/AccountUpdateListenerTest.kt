@@ -63,12 +63,13 @@ class AccountUpdateListenerTest {
 
         // Then
         verify { transferClassificationCache.storeTransferInfo(
-            transferId = transactionId,
+            transferId = transferId,
             accountId = accountId,
             amount = "-50.00",
             type = "DEBIT",
             purpose = "Grocery shopping"
         ) }
+        verify { transferClassificationCache.mapTransactionToTransfer(transactionId, transferId) }
         verify { goalRepository.findByAccountIdAndStatus(accountId, GoalStatus.ACTIVE) }
 
         verify(exactly = 0) { goalRepository.saveAll(any<List<SpendingLimitGoal>>()) }
@@ -86,12 +87,13 @@ class AccountUpdateListenerTest {
 
         // Then
         verify { transferClassificationCache.storeTransferInfo(
-            transferId = transactionId,
+            transferId = transferId,
             accountId = accountId,
             amount = "-50.00",
             type = "DEBIT",
             purpose = "Grocery shopping"
         ) }
+        verify { transferClassificationCache.mapTransactionToTransfer(transactionId, transferId) }
         verify { goalRepository.findByAccountIdAndStatus(accountId, GoalStatus.ACTIVE) }
         verify(exactly = 0) { goalRepository.saveAll(any<List<SpendingLimitGoal>>()) }
         verify(exactly = 0) { rabbitMQService.sendGoalStatusEvent(any()) }
@@ -123,12 +125,13 @@ class AccountUpdateListenerTest {
 
         // Then
         verify { transferClassificationCache.storeTransferInfo(
-            transferId = transactionId,
+            transferId = transferId,
             accountId = accountId,
             amount = "100.00",
             type = "CREDIT",
             purpose = "Salary payment"
         ) }
+        verify { transferClassificationCache.mapTransactionToTransfer(transactionId, transferId) }
         verify { goalRepository.findByAccountIdAndStatus(accountId, GoalStatus.ACTIVE) }
 
         // The goal should be saved and a status event should be sent because the goal is achieved
@@ -148,6 +151,8 @@ class AccountUpdateListenerTest {
         }
     }
 
+    private val transferId = UUID.randomUUID()
+
     private fun createAccountUpdatedEvent(): AccountUpdatedEvent {
         return AccountUpdatedEvent(
             eventType = "ACCOUNT_UPDATED",
@@ -157,6 +162,7 @@ class AccountUpdateListenerTest {
             value = "950.00",
             currencyCode = "EUR",
             transactionId = transactionId.toString(),
+            transferId = transferId.toString(),
             transactionAmount = TransactionAmountDto(
                 value = "-50.00",
                 currencyCode = "EUR"
@@ -175,6 +181,7 @@ class AccountUpdateListenerTest {
             value = "1050.00",
             currencyCode = "EUR",
             transactionId = transactionId.toString(),
+            transferId = transferId.toString(),
             transactionAmount = TransactionAmountDto(
                 value = "100.00",
                 currencyCode = "EUR"
