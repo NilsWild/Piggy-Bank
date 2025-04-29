@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.Clock
 import java.time.Instant
 import java.util.UUID
 
@@ -22,7 +23,8 @@ class AccountService(
     private val accountRepository: AccountRepository,
     private val transactionRepository: TransactionRepository,
     private val rabbitMQService: RabbitMQService,
-    private val transferGatewayClient: TransferGatewayClient
+    private val transferGatewayClient: TransferGatewayClient,
+    private val clock: Clock
 ) {
     private val logger = LoggerFactory.getLogger(AccountService::class.java)
 
@@ -45,14 +47,14 @@ class AccountService(
 
         // Create an initial transaction for the account
         val initialTransaction = Transaction(
-            id = UUID.randomUUID(),
             transferId = UUID.randomUUID(),
             affectedAccountId = savedAccount.id,
             account = savedAccount,
             amount = savedAccount.balance,
-            valuationTimestamp = Instant.now(),
+            valuationTimestamp = Instant.now(clock),
             purpose = "Initial balance",
-            type = TransactionType.DUMMY
+            type = TransactionType.DUMMY,
+            createdAt = Instant.now(clock)
         )
 
         transactionRepository.save(initialTransaction)

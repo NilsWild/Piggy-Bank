@@ -7,6 +7,7 @@ import de.rwth.swc.piggybank.accounttwinservice.domain.TransactionType
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
+import java.time.Clock
 import java.time.Instant
 import java.util.UUID
 
@@ -24,7 +25,7 @@ import java.util.UUID
  * @property destinationAccount The account to which the money was sent (for DEBIT transactions)
  */
 data class TransactionRequest(
-    val id: UUID = UUID.randomUUID(),
+    val id: UUID? = null,
     val transferId: UUID,
     @field:NotBlank(message = "Affected account ID is required")
     val affectedAccountId: String,
@@ -46,7 +47,7 @@ data class TransactionRequest(
      */
     fun toDomain(account: Account): Transaction {
         return Transaction(
-            id = id,
+            id = id ?: UUID.randomUUID(),
             transferId = transferId,
             affectedAccountId = affectedAccountId,
             account = account,
@@ -56,6 +57,30 @@ data class TransactionRequest(
             type = TransactionType.valueOf(type),
             sourceAccount = sourceAccount,
             destinationAccount = destinationAccount
+        )
+    }
+
+    /**
+     * Converts this DTO to a domain Transaction object with controlled time and ID generation.
+     *
+     * @param account The domain Account object
+     * @param clock The clock to use for getting the creation time
+     * @param id The unique identifier of the transaction (optional)
+     * @return The domain Transaction object
+     */
+    fun toDomain(account: Account, clock: Clock, id: UUID = UUID.randomUUID()): Transaction {
+        return Transaction(
+            id = id,
+            transferId = transferId,
+            affectedAccountId = affectedAccountId,
+            account = account,
+            amount = amount.toDomain(),
+            valuationTimestamp = valuationTimestamp,
+            purpose = purpose,
+            type = TransactionType.valueOf(type),
+            sourceAccount = sourceAccount,
+            destinationAccount = destinationAccount,
+            createdAt = Instant.now(clock)
         )
     }
 }

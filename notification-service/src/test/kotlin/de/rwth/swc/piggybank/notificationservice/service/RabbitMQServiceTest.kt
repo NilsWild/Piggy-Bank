@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import java.math.BigDecimal
+import java.time.Instant
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -24,6 +25,7 @@ class RabbitMQServiceTest {
     private val accountId = "test-account-id"
     private val goalId = UUID.randomUUID()
     private val now = LocalDateTime.now()
+    private val testInstant = Instant.parse("2023-01-01T12:00:00Z")
 
     @BeforeEach
     fun setup() {
@@ -163,10 +165,11 @@ class RabbitMQServiceTest {
     @Test
     fun `should send notification to RabbitMQ`() {
         // Given
-        val notification = Notification.create(
+        val notification = Notification(
             accountId = accountId,
             eventType = NotificationEventType.GOAL_UPDATE,
-            message = "Test message"
+            message = "Test message",
+            createdAt = testInstant
         )
 
         // When
@@ -192,10 +195,11 @@ class RabbitMQServiceTest {
     @Test
     fun `should handle exception when sending notification`() {
         // Given
-        val notification = Notification.create(
+        val notification = Notification(
             accountId = accountId,
             eventType = NotificationEventType.GOAL_UPDATE,
-            message = "Test message"
+            message = "Test message",
+            createdAt = testInstant
         )
 
         every {

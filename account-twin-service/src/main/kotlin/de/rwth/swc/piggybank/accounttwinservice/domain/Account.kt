@@ -6,6 +6,7 @@ import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import java.io.Serializable
+import java.time.Clock
 import java.time.Instant
 
 /**
@@ -60,34 +61,4 @@ data class Account(
         return copy(balance = newBalance)
     }
 
-    companion object {
-        /**
-         * Creates an Account from a type and identifier.
-         *
-         * @param type The type of the account
-         * @param identifier The identifier of the account
-         * @param initialBalance The initial balance of the account
-         * @return The Account object
-         */
-        fun create(type: String, identifier: String, initialBalance: Amount): Account {
-            val id = "$type:$identifier"
-            return Account(id, type, identifier, initialBalance)
-        }
-
-        /**
-         * Creates an Account from a string representation in the format "type:identifier".
-         *
-         * @param accountString The string representation of the account
-         * @param initialBalance The initial balance of the account
-         * @return The Account object
-         * @throws IllegalArgumentException If the string is not in the correct format
-         */
-        fun fromString(accountString: String, initialBalance: Amount): Account {
-            val parts = accountString.split(":")
-            if (parts.size != 2) {
-                throw IllegalArgumentException("Invalid account string format: $accountString. Expected format: type:identifier")
-            }
-            return create(parts[0], parts[1], initialBalance)
-        }
-    }
 }

@@ -8,6 +8,7 @@ import de.interact.rest.TestRestClient
 import de.rwth.swc.piggybank.notificationservice.AmqpTestConfig
 import de.rwth.swc.piggybank.notificationservice.config.InterACtConfig
 import de.rwth.swc.piggybank.notificationservice.config.RabbitMQTestConfig
+import de.rwth.swc.piggybank.notificationservice.config.TestClockConfig
 import de.rwth.swc.piggybank.notificationservice.domain.NotificationEventType
 import de.rwth.swc.piggybank.notificationservice.domain.NotificationSubscription
 import de.rwth.swc.piggybank.notificationservice.dto.SubscriptionRequest
@@ -32,6 +33,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.amqp.rabbit.core.RabbitTemplate
+import java.time.Clock
 import java.time.Instant
 import java.util.UUID
 import java.util.stream.Stream
@@ -40,7 +42,7 @@ import java.util.stream.Stream
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
 @ActiveProfiles("test")
-@Import(InterACtConfig::class, AmqpTestConfig::class, SpringAMQPInterACtObserverConfiguration::class)
+@Import(InterACtConfig::class, AmqpTestConfig::class, SpringAMQPInterACtObserverConfiguration::class, TestClockConfig::class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ContextConfiguration(initializers = [RabbitMQTestConfig.Initializer::class])
@@ -122,8 +124,8 @@ class NotificationSubscriptionControllerInterACtTest {
     fun `should get account subscriptions`(requestStimulus: RestMessage.Request<Void>) {
         // Create test subscriptions for the account
         val accountId = "account-123"
-        val subscription1 = createTestSubscription(accountId, NotificationEventType.BALANCE_UPDATE)
-        val subscription2 = createTestSubscription(accountId, NotificationEventType.ACCOUNT_CREATED)
+        createTestSubscription(accountId, NotificationEventType.BALANCE_UPDATE)
+        createTestSubscription(accountId, NotificationEventType.ACCOUNT_CREATED)
 
         // Send the request and get the response
         val response = testClient.prepare(HttpMethod.GET, requestStimulus)
@@ -159,17 +161,20 @@ class NotificationSubscriptionControllerInterACtTest {
         response!!.statusCode shouldBe HttpStatus.NO_CONTENT
     }
 
+    @Autowired
+    private lateinit var clock: Clock
+
     private fun createTestSubscription(
         accountId: String,
         eventType: NotificationEventType,
-        id: UUID = UUID.randomUUID()
+        id: UUID = UUID.fromString("00000000-0000-0000-0000-000000000002")
     ): NotificationSubscription {
         val subscription = NotificationSubscription(
             id = id,
             accountId = accountId,
             eventType = eventType,
             active = true,
-            createdAt = Instant.now()
+            createdAt = Instant.now(clock)
         )
         return subscriptionRepository.save(subscription)
     }

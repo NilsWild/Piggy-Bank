@@ -1,5 +1,6 @@
 package de.rwth.swc.piggybank.transfergateway.domain
 
+import java.time.Clock
 import java.time.Instant
 import java.util.UUID
 
@@ -66,4 +67,5 @@ data class Transfer(
             sourceAccount = "${sourceAccount.type}:${sourceAccount.identifier}",
             destinationAccount = "${targetAccount.type}:${targetAccount.identifier}"
         )
+
 }

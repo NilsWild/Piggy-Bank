@@ -17,7 +17,10 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.Clock
+import java.time.Instant
+import java.time.Duration
+import java.time.ZoneId
 import java.util.Optional
 import java.util.UUID
 
@@ -28,20 +31,23 @@ class GoalServiceTest {
     private lateinit var spendingLimitGoalRepository: SpendingLimitGoalRepository
     private lateinit var savingsGoalRepository: SavingsGoalRepository
     private lateinit var goalService: GoalService
+    private lateinit var clock: Clock
 
     private val accountId = "test-account-id"
-    private val now = LocalDateTime.now()
-    private val future = now.plusDays(30)
+    private val now = Instant.now()
+    private val future = now.plus(Duration.ofDays(30))
 
     @BeforeEach
     fun setup() {
         goalRepository = mockk(relaxed = true)
         spendingLimitGoalRepository = mockk(relaxed = true)
         savingsGoalRepository = mockk(relaxed = true)
+        clock = Clock.fixed(Instant.parse("2023-01-01T12:00:00Z"), ZoneId.of("UTC"))
         goalService = GoalServiceImpl(
             goalRepository = goalRepository,
             spendingLimitGoalRepository = spendingLimitGoalRepository,
-            savingsGoalRepository = savingsGoalRepository
+            savingsGoalRepository = savingsGoalRepository,
+            clock = clock
         )
     }
 
@@ -67,7 +73,9 @@ class GoalServiceTest {
             accountId = request.accountId,
             limit = request.limit,
             currencyCode = request.currencyCode,
-            category = request.category
+            category = request.category,
+            createdAt = Instant.now(clock),
+            updatedAt = Instant.now(clock)
         )
 
         val goalSlot = slot<SpendingLimitGoal>()
@@ -116,7 +124,9 @@ class GoalServiceTest {
             endDate = request.endDate,
             accountId = request.accountId,
             targetAmount = request.targetAmount,
-            currencyCode = request.currencyCode
+            currencyCode = request.currencyCode,
+            createdAt = Instant.now(clock),
+            updatedAt = Instant.now(clock)
         )
 
         val goalSlot = slot<SavingsGoal>()
@@ -155,7 +165,9 @@ class GoalServiceTest {
             accountId = accountId,
             limit = BigDecimal("400.00"),
             currencyCode = "EUR",
-            category = "Grocery"
+            category = "Grocery",
+            createdAt = Instant.now(clock),
+            updatedAt = Instant.now(clock)
         )
 
         every { goalRepository.findById(goalId) } returns Optional.of(goal)
@@ -179,7 +191,9 @@ class GoalServiceTest {
             accountId = accountId,
             limit = BigDecimal("400.00"),
             currencyCode = "EUR",
-            category = "Grocery"
+            category = "Grocery",
+            createdAt = Instant.now(clock),
+            updatedAt = Instant.now(clock)
         )
 
         every { spendingLimitGoalRepository.findById(goalId) } returns Optional.of(goal)
@@ -202,7 +216,9 @@ class GoalServiceTest {
             endDate = future,
             accountId = accountId,
             targetAmount = BigDecimal("1000.00"),
-            currencyCode = "EUR"
+            currencyCode = "EUR",
+            createdAt = Instant.now(clock),
+            updatedAt = Instant.now(clock)
         )
 
         every { savingsGoalRepository.findById(goalId) } returns Optional.of(goal)
@@ -226,7 +242,9 @@ class GoalServiceTest {
                 accountId = accountId,
                 limit = BigDecimal("400.00"),
                 currencyCode = "EUR",
-                category = "Grocery"
+                category = "Grocery",
+                createdAt = Instant.now(clock),
+                updatedAt = Instant.now(clock)
             ),
             SavingsGoal(
                 name = "Vacation Savings",
@@ -235,7 +253,9 @@ class GoalServiceTest {
                 endDate = future,
                 accountId = accountId,
                 targetAmount = BigDecimal("1000.00"),
-                currencyCode = "EUR"
+                currencyCode = "EUR",
+                createdAt = Instant.now(clock),
+                updatedAt = Instant.now(clock)
             )
         )
 
@@ -261,7 +281,9 @@ class GoalServiceTest {
                 accountId = accountId,
                 limit = BigDecimal("400.00"),
                 currencyCode = "EUR",
-                category = "Grocery"
+                category = "Grocery",
+                createdAt = Instant.now(clock),
+                updatedAt = Instant.now(clock)
             ),
             SavingsGoal(
                 name = "Vacation Savings",
@@ -270,7 +292,9 @@ class GoalServiceTest {
                 endDate = future,
                 accountId = accountId,
                 targetAmount = BigDecimal("1000.00"),
-                currencyCode = "EUR"
+                currencyCode = "EUR",
+                createdAt = Instant.now(clock),
+                updatedAt = Instant.now(clock)
             )
         )
 
@@ -296,7 +320,9 @@ class GoalServiceTest {
             accountId = accountId,
             limit = BigDecimal("400.00"),
             currencyCode = "EUR",
-            category = "Grocery"
+            category = "Grocery",
+            createdAt = Instant.now(clock),
+            updatedAt = Instant.now(clock)
         )
 
         every { goalRepository.findById(goalId) } returns Optional.of(goal)

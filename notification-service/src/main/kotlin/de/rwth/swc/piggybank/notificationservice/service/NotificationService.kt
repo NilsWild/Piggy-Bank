@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.time.Clock
+import java.time.Instant
 import java.util.UUID
 
 /**
@@ -23,7 +25,8 @@ import java.util.UUID
 class NotificationService(
     private val notificationRepository: NotificationRepository,
     private val subscriptionRepository: NotificationSubscriptionRepository,
-    @Lazy private val rabbitMQService: RabbitMQService
+    @Lazy private val rabbitMQService: RabbitMQService,
+    private val clock: Clock
 ) {
     private val logger = LoggerFactory.getLogger(NotificationService::class.java)
 
@@ -73,10 +76,11 @@ class NotificationService(
         }
 
         // Create and save a notification
-        val notification = Notification.create(
+        val notification = Notification(
             accountId = accountId,
             eventType = NotificationEventType.BALANCE_UPDATE,
-            message = message
+            message = message,
+            createdAt = Instant.now(clock)
         )
         val savedNotification = notificationRepository.save(notification)
 
@@ -109,7 +113,11 @@ class NotificationService(
         }
 
         // Create and save a new subscription
-        val subscription = NotificationSubscription.create(accountId, eventType)
+        val subscription = NotificationSubscription(
+            accountId = accountId,
+            eventType = eventType,
+            createdAt = Instant.now(clock)
+        )
         return subscriptionRepository.save(subscription)
     }
 
@@ -271,10 +279,11 @@ class NotificationService(
         val message = "Your goal '$goalName' is now at $progressPercentage% ($progress of $target $currencyCode)"
 
         // Create and save a notification
-        val notification = Notification.create(
+        val notification = Notification(
             accountId = accountId,
             eventType = NotificationEventType.GOAL_UPDATE,
-            message = message
+            message = message,
+            createdAt = Instant.now(clock)
         )
         val savedNotification = notificationRepository.save(notification)
 
@@ -314,10 +323,11 @@ class NotificationService(
         val message = "Congratulations! Your goal '$goalName' has been achieved!"
 
         // Create and save a notification
-        val notification = Notification.create(
+        val notification = Notification(
             accountId = accountId,
             eventType = NotificationEventType.GOAL_ACHIEVED,
-            message = message
+            message = message,
+            createdAt = Instant.now(clock)
         )
         val savedNotification = notificationRepository.save(notification)
 
@@ -357,10 +367,11 @@ class NotificationService(
         val message = "Your goal '$goalName' has failed. Don't worry, you can try again!"
 
         // Create and save a notification
-        val notification = Notification.create(
+        val notification = Notification(
             accountId = accountId,
             eventType = NotificationEventType.GOAL_FAILED,
-            message = message
+            message = message,
+            createdAt = Instant.now(clock)
         )
         val savedNotification = notificationRepository.save(notification)
 

@@ -56,19 +56,4 @@ data class NotificationSubscription(
         return copy(active = true)
     }
 
-    companion object {
-        /**
-         * Creates a new active subscription.
-         *
-         * @param accountId The identifier of the account
-         * @param eventType The type of event
-         * @return The created subscription
-         */
-        fun create(accountId: String, eventType: NotificationEventType): NotificationSubscription {
-            return NotificationSubscription(
-                accountId = accountId,
-                eventType = eventType
-            )
-        }
-    }
 }

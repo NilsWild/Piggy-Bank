@@ -4,7 +4,8 @@ import jakarta.persistence.Column
 import jakarta.persistence.DiscriminatorValue
 import jakarta.persistence.Entity
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.Clock
+import java.time.Instant
 
 /**
  * A goal to limit spending on a specific category.
@@ -20,8 +21,8 @@ import java.time.LocalDateTime
 class SpendingLimitGoal(
     name: String,
     description: String? = null,
-    startDate: LocalDateTime,
-    endDate: LocalDateTime,
+    startDate: Instant,
+    endDate: Instant,
     accountId: String,
 
     @Column(nullable = false)
@@ -34,15 +35,21 @@ class SpendingLimitGoal(
     val category: String,
 
     @Column(nullable = false)
-    var currentSpending: BigDecimal = BigDecimal.ZERO
+    var currentSpending: BigDecimal = BigDecimal.ZERO,
+
+    createdAt: Instant,
+    updatedAt: Instant
 ) : Goal(
     name = name,
     description = description,
     type = GoalType.SPENDING_LIMIT,
     startDate = startDate,
     endDate = endDate,
-    accountId = accountId
+    accountId = accountId,
+    createdAt = createdAt,
+    updatedAt = updatedAt
 ) {
+
     /**
      * Processes an account update event.
      * Updates the current spending if the transaction is relevant to this goal.
@@ -59,41 +66,44 @@ class SpendingLimitGoal(
         transactionAmount: BigDecimal,
         transactionType: String,
         transactionPurpose: String,
-        classifications: List<String>
+        classifications: List<String>,
+        clock: Clock
     ): Boolean {
-        // Ignore if not for this account or if goal has ended
-        if (this.accountId != accountId || hasEnded()) {
+        // Ignore if not for this account
+        if (this.accountId != accountId) {
             return false
         }
 
-        // Check if the transaction is relevant to this goal (matches the category)
-        if (classifications.contains(category)) {
-            // Only count outgoing transactions (DEBIT type)
-            if (transactionType == "DEBIT") {
-                // Add the absolute value of the transaction amount to the current spending
-                currentSpending = currentSpending.add(transactionAmount.abs())
-                updatedAt = LocalDateTime.now()
+        // Ignore if the goal has ended
+        if (hasEnded()) {
+            return false
+        }
 
-                // Check if the goal has been exceeded
-                if (currentSpending > limit) {
-                    updateStatus(GoalStatus.FAILED)
-                    return true
-                }
+        // Save the original status to check if it changes
+        val originalStatus = status
+
+        // Update the current spending if the transaction is relevant
+        if (classifications.contains(category) && transactionType == "DEBIT") {
+            currentSpending = currentSpending.add(transactionAmount.abs())
+            updatedAt = Instant.now(clock)
+
+            // Check if the goal has been exceeded
+            if (currentSpending > limit && isActive()) {
+                updateStatus(GoalStatus.FAILED, clock)
             }
         }
 
         // Check if the goal's timeframe has expired
-        if (isExpired() && isActive()) {
+        if (isExpired(clock) && isActive()) {
             // If we're under the limit, the goal is achieved
             if (currentSpending <= limit) {
-                updateStatus(GoalStatus.ACHIEVED)
-                return true
+                updateStatus(GoalStatus.ACHIEVED, clock)
             } else {
-                updateStatus(GoalStatus.FAILED)
-                return true
+                updateStatus(GoalStatus.FAILED, clock)
             }
         }
 
-        return false
+        // Return true if the status changed, false otherwise
+        return status != originalStatus
     }
 }

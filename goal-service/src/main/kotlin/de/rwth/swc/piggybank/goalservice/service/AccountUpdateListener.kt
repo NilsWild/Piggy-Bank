@@ -10,6 +10,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
+import java.time.Clock
 import java.util.UUID
 
 /**
@@ -20,7 +21,8 @@ import java.util.UUID
 class AccountUpdateListener(
     private val goalRepository: GoalRepository,
     private val rabbitMQService: RabbitMQService,
-    private val transferClassificationCache: TransferClassificationCache
+    private val transferClassificationCache: TransferClassificationCache,
+    private val clock: Clock
 ) {
     private val logger = LoggerFactory.getLogger(AccountUpdateListener::class.java)
 
@@ -77,7 +79,8 @@ class AccountUpdateListener(
                         transactionAmount = transactionAmount,
                         transactionType = transactionType,
                         transactionPurpose = transactionPurpose,
-                        classifications = classifications
+                        classifications = classifications,
+                        clock = clock
                     )
                 }
             }

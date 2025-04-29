@@ -14,6 +14,7 @@ import de.rwth.swc.piggybank.goalservice.repository.SpendingLimitGoalRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.Clock
 import java.util.UUID
 
 /**
@@ -23,7 +24,8 @@ import java.util.UUID
 class GoalServiceImpl(
     private val goalRepository: GoalRepository,
     private val spendingLimitGoalRepository: SpendingLimitGoalRepository,
-    private val savingsGoalRepository: SavingsGoalRepository
+    private val savingsGoalRepository: SavingsGoalRepository,
+    private val clock: Clock
 ) : GoalService {
     private val logger = LoggerFactory.getLogger(GoalServiceImpl::class.java)
 
@@ -36,7 +38,7 @@ class GoalServiceImpl(
     @Transactional
     override fun createSpendingLimitGoal(request: CreateSpendingLimitGoalRequest): SpendingLimitGoalResponse {
         logger.info("Creating spending limit goal: {}", request)
-        val goal = request.toDomain()
+        val goal = request.toDomain(clock)
         val savedGoal = spendingLimitGoalRepository.save(goal)
         logger.info("Spending limit goal created: {}", savedGoal)
         return SpendingLimitGoalResponse.fromDomain(savedGoal)
@@ -51,7 +53,7 @@ class GoalServiceImpl(
     @Transactional
     override fun createSavingsGoal(request: CreateSavingsGoalRequest): SavingsGoalResponse {
         logger.info("Creating savings goal: {}", request)
-        val goal = request.toDomain()
+        val goal = request.toDomain(clock)
         val savedGoal = savingsGoalRepository.save(goal)
         logger.info("Savings goal created: {}", savedGoal)
         return SavingsGoalResponse.fromDomain(savedGoal)
@@ -164,7 +166,7 @@ class GoalServiceImpl(
     override fun updateGoalStatus(id: UUID, status: GoalStatus): Goal? {
         logger.info("Updating goal status: {} -> {}", id, status)
         val goal = goalRepository.findById(id).orElse(null) ?: return null
-        goal.updateStatus(status)
+        goal.updateStatus(status, clock)
         return goalRepository.save(goal)
     }
 

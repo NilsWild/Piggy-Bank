@@ -1,5 +1,6 @@
 package de.rwth.swc.piggybank.transferclassifier.domain
 
+import java.time.Clock
 import java.time.Instant
 import java.util.UUID
 
@@ -21,4 +22,5 @@ data class Transfer(
     val amount: Amount,
     val valuationTimestamp: Instant,
     val purpose: String
-)
+) {
+}

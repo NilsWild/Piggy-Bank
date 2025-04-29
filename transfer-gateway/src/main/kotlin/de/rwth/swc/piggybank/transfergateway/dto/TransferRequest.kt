@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import de.rwth.swc.piggybank.transfergateway.domain.Account
 import de.rwth.swc.piggybank.transfergateway.domain.Amount
 import de.rwth.swc.piggybank.transfergateway.domain.Transfer
+import java.time.Clock
 import java.time.Instant
 import java.util.UUID
 import jakarta.validation.Valid
@@ -51,11 +52,26 @@ data class TransferRequest @JsonCreator constructor(
      */
     fun toDomain(): Transfer {
         return Transfer(
-            id = UUID.randomUUID(),
             sourceAccount = sourceAccount,
             targetAccount = targetAccount,
             amount = amount,
             valuationTimestamp = valuationTimestamp,
+            purpose = purpose
+        )
+    }
+
+    /**
+     * Converts this DTO to a domain Transfer object with controlled time generation.
+     *
+     * @param clock The clock to use for getting the valuation timestamp
+     * @return The domain Transfer object
+     */
+    fun toDomain(clock: Clock): Transfer {
+        return Transfer(
+            sourceAccount = sourceAccount,
+            targetAccount = targetAccount,
+            amount = amount,
+            valuationTimestamp = Instant.now(clock),
             purpose = purpose
         )
     }

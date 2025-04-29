@@ -4,7 +4,8 @@ import jakarta.persistence.Column
 import jakarta.persistence.DiscriminatorValue
 import jakarta.persistence.Entity
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.Clock
+import java.time.Instant
 
 /**
  * A goal to save a certain amount of money.
@@ -18,8 +19,8 @@ import java.time.LocalDateTime
 class SavingsGoal(
     name: String,
     description: String? = null,
-    startDate: LocalDateTime,
-    endDate: LocalDateTime,
+    startDate: Instant,
+    endDate: Instant,
     accountId: String,
 
     @Column(nullable = false)
@@ -29,15 +30,21 @@ class SavingsGoal(
     val currencyCode: String,
 
     @Column(nullable = false)
-    var currentAmount: BigDecimal = BigDecimal.ZERO
+    var currentAmount: BigDecimal = BigDecimal.ZERO,
+
+    createdAt: Instant,
+    updatedAt: Instant
 ) : Goal(
     name = name,
     description = description,
     type = GoalType.SAVINGS,
     startDate = startDate,
     endDate = endDate,
-    accountId = accountId
+    accountId = accountId,
+    createdAt = createdAt,
+    updatedAt = updatedAt
 ) {
+
     /**
      * Processes an account update event.
      * Updates the current amount if the transaction is relevant to this goal.
@@ -54,34 +61,34 @@ class SavingsGoal(
         transactionAmount: BigDecimal,
         transactionType: String,
         transactionPurpose: String,
-        classifications: List<String>
+        classifications: List<String>,
+        clock: Clock
     ): Boolean {
         // Ignore if not for this account or if goal has ended
         if (this.accountId != accountId || hasEnded()) {
             return false
         }
 
-        // Only count incoming transactions (positive amounts)
-        if (transactionAmount > BigDecimal.ZERO) {
+        if (transactionType == "CREDIT") {
             // Add the transaction amount to the current amount
             currentAmount = currentAmount.add(transactionAmount)
-            updatedAt = LocalDateTime.now()
+            updatedAt = Instant.now(clock)
 
             // Check if the target has been reached
             if (currentAmount >= targetAmount) {
-                updateStatus(GoalStatus.ACHIEVED)
+                updateStatus(GoalStatus.ACHIEVED, clock)
                 return true
             }
         }
 
         // Check if the goal's timeframe has expired
-        if (isExpired() && isActive()) {
+        if (isExpired(clock) && isActive()) {
             // If we've reached the target, the goal is achieved
             if (currentAmount >= targetAmount) {
-                updateStatus(GoalStatus.ACHIEVED)
+                updateStatus(GoalStatus.ACHIEVED, clock)
                 return true
             } else {
-                updateStatus(GoalStatus.FAILED)
+                updateStatus(GoalStatus.FAILED, clock)
                 return true
             }
         }

@@ -50,7 +50,8 @@ class AccountControllerTest {
         val initialBalance = AmountDto(BigDecimal("100.00"), "EUR")
         val accountRequest = AccountRequest(type, identifier, initialBalance)
 
-        val account = Account.create(type, identifier, initialBalance.toDomain())
+        val id = "$type:$identifier"
+        val account = Account(id, type, identifier, initialBalance.toDomain())
 
         every { accountService.createAccount(any()) } returns account
 

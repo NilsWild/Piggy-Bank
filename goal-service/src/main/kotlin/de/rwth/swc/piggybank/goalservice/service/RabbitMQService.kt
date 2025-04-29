@@ -16,7 +16,10 @@ import org.springframework.stereotype.Service
  * Service for sending goal-related events to RabbitMQ.
  */
 @Service
-class RabbitMQService(private val rabbitTemplate: RabbitTemplate) {
+class RabbitMQService(
+    private val rabbitTemplate: RabbitTemplate,
+    private val clock: java.time.Clock
+) {
     private val logger = LoggerFactory.getLogger(RabbitMQService::class.java)
 
     /**
@@ -32,13 +35,15 @@ class RabbitMQService(private val rabbitTemplate: RabbitTemplate) {
                     goal = goal,
                     progress = goal.currentSpending,
                     target = goal.limit,
-                    currencyCode = goal.currencyCode
+                    currencyCode = goal.currencyCode,
+                    clock = clock
                 )
                 is SavingsGoal -> GoalUpdatedEvent.fromDomain(
                     goal = goal,
                     progress = goal.currentAmount,
                     target = goal.targetAmount,
-                    currencyCode = goal.currencyCode
+                    currencyCode = goal.currencyCode,
+                    clock = clock
                 )
                 else -> throw IllegalArgumentException("Unsupported goal type: ${goal.javaClass.name}")
             }
@@ -63,7 +68,7 @@ class RabbitMQService(private val rabbitTemplate: RabbitTemplate) {
     fun sendGoalAchievedEvent(goal: Goal) {
         logger.info("Sending goal achieved event to RabbitMQ: {}", goal)
         try {
-            val event = GoalAchievedEvent.fromDomain(goal)
+            val event = GoalAchievedEvent.fromDomain(goal, clock)
             rabbitTemplate.convertAndSend(
                 RabbitMQConfig.GOAL_EXCHANGE_NAME,
                 RabbitMQConfig.GOAL_ACHIEVED_ROUTING_KEY,
@@ -84,7 +89,7 @@ class RabbitMQService(private val rabbitTemplate: RabbitTemplate) {
     fun sendGoalFailedEvent(goal: Goal) {
         logger.info("Sending goal failed event to RabbitMQ: {}", goal)
         try {
-            val event = GoalFailedEvent.fromDomain(goal)
+            val event = GoalFailedEvent.fromDomain(goal, clock)
             rabbitTemplate.convertAndSend(
                 RabbitMQConfig.GOAL_EXCHANGE_NAME,
                 RabbitMQConfig.GOAL_FAILED_ROUTING_KEY,

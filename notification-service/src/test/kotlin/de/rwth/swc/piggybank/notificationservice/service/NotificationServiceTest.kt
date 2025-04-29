@@ -10,6 +10,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneId
 import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -18,20 +21,24 @@ class NotificationServiceTest {
     private lateinit var notificationRepository: NotificationRepository
     private lateinit var subscriptionRepository: NotificationSubscriptionRepository
     private lateinit var rabbitMQService: RabbitMQService
+    private lateinit var clock: Clock
     private lateinit var notificationService: NotificationService
 
     private val accountId = "test-account-id"
-    private val goalId = UUID.randomUUID()
+    private val goalId = UUID.fromString("00000000-0000-0000-0000-000000000001")
+    private val testInstant = Instant.parse("2023-01-01T12:00:00Z")
 
     @BeforeEach
     fun setup() {
         notificationRepository = mockk(relaxed = true)
         subscriptionRepository = mockk(relaxed = true)
         rabbitMQService = mockk(relaxed = true)
+        clock = Clock.fixed(Instant.parse("2023-01-01T12:00:00Z"), ZoneId.of("UTC"))
         notificationService = NotificationService(
             notificationRepository = notificationRepository,
             subscriptionRepository = subscriptionRepository,
-            rabbitMQService = rabbitMQService
+            rabbitMQService = rabbitMQService,
+            clock = clock
         )
     }
 
@@ -39,7 +46,11 @@ class NotificationServiceTest {
     fun `should process goal updated event with active subscriptions`() {
         // Given
         val subscriptions = listOf(
-            NotificationSubscription.create(accountId, NotificationEventType.GOAL_UPDATE)
+            NotificationSubscription(
+                accountId = accountId,
+                eventType = NotificationEventType.GOAL_UPDATE,
+                createdAt = testInstant
+            )
         )
         every {
             subscriptionRepository.findByAccountIdAndEventTypeAndActiveTrue(
@@ -118,7 +129,11 @@ class NotificationServiceTest {
     fun `should process goal achieved event with active subscriptions`() {
         // Given
         val subscriptions = listOf(
-            NotificationSubscription.create(accountId, NotificationEventType.GOAL_ACHIEVED)
+            NotificationSubscription(
+                accountId = accountId,
+                eventType = NotificationEventType.GOAL_ACHIEVED,
+                createdAt = testInstant
+            )
         )
         every {
             subscriptionRepository.findByAccountIdAndEventTypeAndActiveTrue(
@@ -186,7 +201,11 @@ class NotificationServiceTest {
     fun `should process goal failed event with active subscriptions`() {
         // Given
         val subscriptions = listOf(
-            NotificationSubscription.create(accountId, NotificationEventType.GOAL_FAILED)
+            NotificationSubscription(
+                accountId = accountId,
+                eventType = NotificationEventType.GOAL_FAILED,
+                createdAt = testInstant
+            )
         )
         every {
             subscriptionRepository.findByAccountIdAndEventTypeAndActiveTrue(

@@ -9,6 +9,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
+import java.time.Clock
 import java.time.Instant
 import java.util.UUID
 
@@ -89,4 +90,5 @@ data class Transaction(
     fun updateAccountBalance(): Account {
         return account.updateBalance(amount, type)
     }
+
 }

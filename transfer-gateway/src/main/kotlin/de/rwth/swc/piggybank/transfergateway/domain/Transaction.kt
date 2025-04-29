@@ -1,5 +1,6 @@
 package de.rwth.swc.piggybank.transfergateway.domain
 
+import java.time.Clock
 import java.time.Instant
 import java.util.UUID
 
@@ -41,4 +42,5 @@ data class Transaction(
      * @return true if the transaction is a debit, false otherwise
      */
     fun isDebit(): Boolean = type == TransactionType.DEBIT
+
 }

@@ -77,13 +77,15 @@ data class GoalUpdatedEvent(
          * @param progress The current progress of the goal
          * @param target The target of the goal
          * @param currencyCode The currency code of the goal
+         * @param clock The clock to use for getting the current time
          * @return The GoalUpdatedEvent
          */
         fun fromDomain(
             goal: Goal,
             progress: BigDecimal,
             target: BigDecimal,
-            currencyCode: String
+            currencyCode: String,
+            clock: java.time.Clock
         ): GoalUpdatedEvent {
             return GoalUpdatedEvent(
                 goalId = goal.id,
@@ -91,6 +93,7 @@ data class GoalUpdatedEvent(
                 goalType = goal.type,
                 goalStatus = goal.status,
                 accountId = goal.accountId,
+                timestamp = LocalDateTime.now(clock),
                 progress = progress,
                 target = target,
                 currencyCode = currencyCode
@@ -116,15 +119,17 @@ data class GoalAchievedEvent(
          * Creates a GoalAchievedEvent from a Goal.
          *
          * @param goal The goal that was achieved
+         * @param clock The clock to use for getting the current time
          * @return The GoalAchievedEvent
          */
-        fun fromDomain(goal: Goal): GoalAchievedEvent {
+        fun fromDomain(goal: Goal, clock: java.time.Clock): GoalAchievedEvent {
             return GoalAchievedEvent(
                 goalId = goal.id,
                 goalName = goal.name,
                 goalType = goal.type,
                 goalStatus = goal.status,
-                accountId = goal.accountId
+                accountId = goal.accountId,
+                timestamp = LocalDateTime.now(clock)
             )
         }
     }
@@ -147,15 +152,17 @@ data class GoalFailedEvent(
          * Creates a GoalFailedEvent from a Goal.
          *
          * @param goal The goal that failed
+         * @param clock The clock to use for getting the current time
          * @return The GoalFailedEvent
          */
-        fun fromDomain(goal: Goal): GoalFailedEvent {
+        fun fromDomain(goal: Goal, clock: java.time.Clock): GoalFailedEvent {
             return GoalFailedEvent(
                 goalId = goal.id,
                 goalName = goal.name,
                 goalType = goal.type,
                 goalStatus = goal.status,
-                accountId = goal.accountId
+                accountId = goal.accountId,
+                timestamp = LocalDateTime.now(clock)
             )
         }
     }

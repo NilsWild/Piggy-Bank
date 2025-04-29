@@ -4,15 +4,19 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.Clock
+import java.time.Duration
+import java.time.Instant
+import java.time.ZoneId
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SavingsGoalTest {
 
     private val accountId = "test-account-id"
-    private val now = LocalDateTime.now()
-    private val future = now.plusDays(30)
-    private val past = now.minusDays(1)
+    private val clock = Clock.fixed(Instant.parse("2023-01-01T12:00:00Z"), ZoneId.of("UTC"))
+    private val now = Instant.now(clock)
+    private val future = now.plus(Duration.ofDays(30))
+    private val past = now.minus(Duration.ofDays(1))
 
     @Test
     fun `should update current amount when transaction is positive`() {
@@ -24,7 +28,9 @@ class SavingsGoalTest {
             endDate = future,
             accountId = accountId,
             targetAmount = BigDecimal("1000.00"),
-            currencyCode = "EUR"
+            currencyCode = "EUR",
+            createdAt = now,
+            updatedAt = now
         )
 
         // When
@@ -33,7 +39,8 @@ class SavingsGoalTest {
             transactionAmount = BigDecimal("200.00"),
             transactionType = "CREDIT",
             transactionPurpose = "Salary",
-            classifications = emptyList()
+            classifications = emptyList(),
+            clock = clock
         )
 
         // Then
@@ -51,7 +58,9 @@ class SavingsGoalTest {
             endDate = future,
             accountId = accountId,
             targetAmount = BigDecimal("1000.00"),
-            currencyCode = "EUR"
+            currencyCode = "EUR",
+            createdAt = now,
+            updatedAt = now
         )
 
         // When
@@ -60,7 +69,8 @@ class SavingsGoalTest {
             transactionAmount = BigDecimal("-50.00"),
             transactionType = "DEBIT",
             transactionPurpose = "Grocery shopping",
-            classifications = emptyList()
+            classifications = emptyList(),
+            clock = clock
         )
 
         // Then
@@ -79,7 +89,9 @@ class SavingsGoalTest {
             accountId = accountId,
             targetAmount = BigDecimal("1000.00"),
             currencyCode = "EUR",
-            currentAmount = BigDecimal("800.00")
+            currentAmount = BigDecimal("800.00"),
+            createdAt = now,
+            updatedAt = now
         )
 
         // When
@@ -88,7 +100,8 @@ class SavingsGoalTest {
             transactionAmount = BigDecimal("300.00"),
             transactionType = "CREDIT",
             transactionPurpose = "Salary",
-            classifications = emptyList()
+            classifications = emptyList(),
+            clock = clock
         )
 
         // Then
@@ -103,12 +116,14 @@ class SavingsGoalTest {
         val goal = SavingsGoal(
             name = "Vacation Savings",
             description = "Save 1000 EUR for summer vacation",
-            startDate = past.minusDays(30),
+            startDate = past.minus(Duration.ofDays(30)),
             endDate = past,
             accountId = accountId,
             targetAmount = BigDecimal("1000.00"),
             currencyCode = "EUR",
-            currentAmount = BigDecimal("1100.00")
+            currentAmount = BigDecimal("1100.00"),
+            createdAt = now,
+            updatedAt = now
         )
 
         // When
@@ -117,7 +132,8 @@ class SavingsGoalTest {
             transactionAmount = BigDecimal("100.00"),
             transactionType = "CREDIT",
             transactionPurpose = "Salary",
-            classifications = emptyList()
+            classifications = emptyList(),
+            clock = clock
         )
 
         // Then
@@ -132,12 +148,14 @@ class SavingsGoalTest {
         val goal = SavingsGoal(
             name = "Vacation Savings",
             description = "Save 1000 EUR for summer vacation",
-            startDate = past.minusDays(30),
+            startDate = past.minus(Duration.ofDays(30)),
             endDate = past,
             accountId = accountId,
             targetAmount = BigDecimal("1000.00"),
             currencyCode = "EUR",
-            currentAmount = BigDecimal("800.00")
+            currentAmount = BigDecimal("800.00"),
+            createdAt = now,
+            updatedAt = now
         )
 
         // When
@@ -146,7 +164,8 @@ class SavingsGoalTest {
             transactionAmount = BigDecimal("100.00"),
             transactionType = "CREDIT",
             transactionPurpose = "Salary",
-            classifications = emptyList()
+            classifications = emptyList(),
+            clock = clock
         )
 
         // Then
@@ -165,7 +184,9 @@ class SavingsGoalTest {
             endDate = future,
             accountId = accountId,
             targetAmount = BigDecimal("1000.00"),
-            currencyCode = "EUR"
+            currencyCode = "EUR",
+            createdAt = now,
+            updatedAt = now
         )
 
         // When
@@ -174,7 +195,8 @@ class SavingsGoalTest {
             transactionAmount = BigDecimal("200.00"),
             transactionType = "CREDIT",
             transactionPurpose = "Salary",
-            classifications = emptyList()
+            classifications = emptyList(),
+            clock = clock
         )
 
         // Then
@@ -192,9 +214,11 @@ class SavingsGoalTest {
             endDate = future,
             accountId = accountId,
             targetAmount = BigDecimal("1000.00"),
-            currencyCode = "EUR"
+            currencyCode = "EUR",
+            createdAt = now,
+            updatedAt = now
         )
-        goal.updateStatus(GoalStatus.ACHIEVED)
+        goal.updateStatus(GoalStatus.ACHIEVED, clock)
 
         // When
         val statusChanged = goal.processAccountUpdate(
@@ -202,7 +226,8 @@ class SavingsGoalTest {
             transactionAmount = BigDecimal("200.00"),
             transactionType = "CREDIT",
             transactionPurpose = "Salary",
-            classifications = emptyList()
+            classifications = emptyList(),
+            clock = clock
         )
 
         // Then

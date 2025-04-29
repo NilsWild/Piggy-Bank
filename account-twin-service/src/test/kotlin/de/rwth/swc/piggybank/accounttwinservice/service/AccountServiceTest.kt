@@ -20,7 +20,9 @@ import org.junit.jupiter.api.assertThrows
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import java.math.BigDecimal
+import java.time.Clock
 import java.time.Instant
+import java.time.ZoneId
 import java.util.Optional
 import java.util.UUID
 
@@ -32,6 +34,7 @@ class AccountServiceTest {
     private val rabbitMQService: RabbitMQService = mockk()
     private val transferGatewayClient: TransferGatewayClient = mockk()
     private val transactionSlot = slot<Transaction>()
+    private val clock: Clock = Clock.fixed(Instant.parse("2023-01-01T12:00:00Z"), ZoneId.of("UTC"))
 
     @BeforeEach
     fun setUp() {
@@ -39,7 +42,8 @@ class AccountServiceTest {
             accountRepository,
             transactionRepository,
             rabbitMQService,
-            transferGatewayClient
+            transferGatewayClient,
+            clock
         )
     }
 
@@ -49,7 +53,8 @@ class AccountServiceTest {
         val type = "BankAccount"
         val identifier = "DE123456789"
         val balance = Amount(BigDecimal("100.00"), "EUR")
-        val account = Account.create(type, identifier, balance)
+        val id = "$type:$identifier"
+        val account = Account(id, type, identifier, balance)
 
         every { accountRepository.existsByTypeAndIdentifier(type, identifier) } returns false
         every { accountRepository.save(account) } returns account
@@ -84,7 +89,8 @@ class AccountServiceTest {
         val type = "BankAccount"
         val identifier = "DE123456789"
         val balance = Amount(BigDecimal("100.00"), "EUR")
-        val account = Account.create(type, identifier, balance)
+        val id = "$type:$identifier"
+        val account = Account(id, type, identifier, balance)
 
         every { accountRepository.existsByTypeAndIdentifier(type, identifier) } returns true
 

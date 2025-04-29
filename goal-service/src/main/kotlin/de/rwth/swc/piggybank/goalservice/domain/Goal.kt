@@ -2,7 +2,8 @@ package de.rwth.swc.piggybank.goalservice.domain
 
 import jakarta.persistence.*
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.Clock
+import java.time.Instant
 import java.util.UUID
 
 /**
@@ -82,28 +83,29 @@ abstract class Goal(
     var status: GoalStatus = GoalStatus.ACTIVE,
 
     @Column(nullable = false)
-    val startDate: LocalDateTime,
+    val startDate: Instant,
 
     @Column(nullable = false)
-    val endDate: LocalDateTime,
+    val endDate: Instant,
 
     @Column(nullable = false)
     val accountId: String,
 
     @Column(nullable = false)
-    val createdAt: LocalDateTime = LocalDateTime.now(),
+    val createdAt: Instant,
 
     @Column(nullable = false)
-    var updatedAt: LocalDateTime = LocalDateTime.now()
+    var updatedAt: Instant
 ) {
     /**
      * Updates the status of the goal.
      *
      * @param newStatus The new status of the goal
+     * @param clock The clock to use for getting the update time
      */
-    fun updateStatus(newStatus: GoalStatus) {
+    fun updateStatus(newStatus: GoalStatus, clock: Clock) {
         status = newStatus
-        updatedAt = LocalDateTime.now()
+        updatedAt = Instant.now(clock)
     }
 
     /**
@@ -127,10 +129,11 @@ abstract class Goal(
     /**
      * Checks if the goal's timeframe has expired.
      *
+     * @param clock The clock to use for getting the current time
      * @return true if the goal's timeframe has expired, false otherwise
      */
-    fun isExpired(): Boolean {
-        return LocalDateTime.now().isAfter(endDate)
+    fun isExpired(clock: Clock): Boolean {
+        return Instant.now(clock).isAfter(endDate)
     }
 
     /**
@@ -142,6 +145,7 @@ abstract class Goal(
      * @param transactionType The type of the transaction
      * @param transactionPurpose The purpose of the transaction
      * @param classifications The classifications of the transaction
+     * @param clock The clock to use for getting the current time
      * @return true if the goal's status changed, false otherwise
      */
     abstract fun processAccountUpdate(
@@ -149,6 +153,7 @@ abstract class Goal(
         transactionAmount: BigDecimal,
         transactionType: String,
         transactionPurpose: String,
-        classifications: List<String>
+        classifications: List<String>,
+        clock: Clock
     ): Boolean
 }

@@ -4,15 +4,19 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.Clock
+import java.time.Duration
+import java.time.Instant
+import java.time.ZoneId
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SpendingLimitGoalTest {
 
     private val accountId = "test-account-id"
-    private val now = LocalDateTime.now()
-    private val future = now.plusDays(30)
-    private val past = now.minusDays(1)
+    private val clock = Clock.fixed(Instant.parse("2023-01-01T12:00:00Z"), ZoneId.of("UTC"))
+    private val now = Instant.now(clock)
+    private val future = now.plus(Duration.ofDays(30))
+    private val past = now.minus(Duration.ofDays(1))
 
     @Test
     fun `should update current spending when transaction matches category`() {
@@ -25,16 +29,19 @@ class SpendingLimitGoalTest {
             accountId = accountId,
             limit = BigDecimal("400.00"),
             currencyCode = "EUR",
-            category = "Grocery"
+            category = "Grocery",
+            createdAt = now,
+            updatedAt = now
         )
 
         // When
         val statusChanged = goal.processAccountUpdate(
             accountId = accountId,
-            transactionAmount = BigDecimal("-50.00"),
+            transactionAmount = BigDecimal("50.00"),
             transactionType = "DEBIT",
             transactionPurpose = "Aldi purchase",
-            classifications = listOf("Grocery")
+            classifications = listOf("Grocery"),
+            clock = clock
         )
 
         // Then
@@ -53,16 +60,19 @@ class SpendingLimitGoalTest {
             accountId = accountId,
             limit = BigDecimal("400.00"),
             currencyCode = "EUR",
-            category = "Grocery"
+            category = "Grocery",
+            createdAt = now,
+            updatedAt = now
         )
 
         // When
         val statusChanged = goal.processAccountUpdate(
             accountId = accountId,
-            transactionAmount = BigDecimal("-50.00"),
+            transactionAmount = BigDecimal("50.00"),
             transactionType = "DEBIT",
             transactionPurpose = "Hotel booking",
-            classifications = listOf("Holiday")
+            classifications = listOf("Holiday"),
+            clock = clock
         )
 
         // Then
@@ -81,7 +91,9 @@ class SpendingLimitGoalTest {
             accountId = accountId,
             limit = BigDecimal("400.00"),
             currencyCode = "EUR",
-            category = "Grocery"
+            category = "Grocery",
+            createdAt = now,
+            updatedAt = now
         )
 
         // When
@@ -90,7 +102,8 @@ class SpendingLimitGoalTest {
             transactionAmount = BigDecimal("50.00"),
             transactionType = "CREDIT",
             transactionPurpose = "Aldi refund",
-            classifications = listOf("Grocery")
+            classifications = listOf("Grocery"),
+            clock = clock
         )
 
         // Then
@@ -109,24 +122,28 @@ class SpendingLimitGoalTest {
             accountId = accountId,
             limit = BigDecimal("400.00"),
             currencyCode = "EUR",
-            category = "Grocery"
+            category = "Grocery",
+            createdAt = now,
+            updatedAt = now
         )
 
         // When
         goal.processAccountUpdate(
             accountId = accountId,
-            transactionAmount = BigDecimal("-300.00"),
+            transactionAmount = BigDecimal("300.00"),
             transactionType = "DEBIT",
             transactionPurpose = "Aldi purchase",
-            classifications = listOf("Grocery")
+            classifications = listOf("Grocery"),
+            clock = clock
         )
 
         val statusChanged = goal.processAccountUpdate(
             accountId = accountId,
-            transactionAmount = BigDecimal("-150.00"),
+            transactionAmount = BigDecimal("150.00"),
             transactionType = "DEBIT",
             transactionPurpose = "Lidl purchase",
-            classifications = listOf("Grocery")
+            classifications = listOf("Grocery"),
+            clock = clock
         )
 
         // Then
@@ -141,22 +158,25 @@ class SpendingLimitGoalTest {
         val goal = SpendingLimitGoal(
             name = "Grocery Spending Limit",
             description = "Limit grocery spending to 400 EUR per month",
-            startDate = past.minusDays(30),
+            startDate = past.minus(Duration.ofDays(30)),
             endDate = past,
             accountId = accountId,
             limit = BigDecimal("400.00"),
             currencyCode = "EUR",
             category = "Grocery",
-            currentSpending = BigDecimal("350.00")
+            currentSpending = BigDecimal("350.00"),
+            createdAt = now,
+            updatedAt = now
         )
 
         // When
         val statusChanged = goal.processAccountUpdate(
             accountId = accountId,
-            transactionAmount = BigDecimal("-10.00"),
+            transactionAmount = BigDecimal("10.00"),
             transactionType = "DEBIT",
             transactionPurpose = "Aldi purchase",
-            classifications = listOf("Grocery")
+            classifications = listOf("Grocery"),
+            clock = clock
         )
 
         // Then
@@ -171,22 +191,25 @@ class SpendingLimitGoalTest {
         val goal = SpendingLimitGoal(
             name = "Grocery Spending Limit",
             description = "Limit grocery spending to 400 EUR per month",
-            startDate = past.minusDays(30),
+            startDate = past.minus(Duration.ofDays(30)),
             endDate = past,
             accountId = accountId,
             limit = BigDecimal("400.00"),
             currencyCode = "EUR",
             category = "Grocery",
-            currentSpending = BigDecimal("450.00")
+            currentSpending = BigDecimal("450.00"),
+            createdAt = now,
+            updatedAt = now
         )
 
         // When
         val statusChanged = goal.processAccountUpdate(
             accountId = accountId,
-            transactionAmount = BigDecimal("-10.00"),
+            transactionAmount = BigDecimal("10.00"),
             transactionType = "DEBIT",
             transactionPurpose = "Aldi purchase",
-            classifications = listOf("Grocery")
+            classifications = listOf("Grocery"),
+            clock = clock
         )
 
         // Then
@@ -206,16 +229,19 @@ class SpendingLimitGoalTest {
             accountId = accountId,
             limit = BigDecimal("400.00"),
             currencyCode = "EUR",
-            category = "Grocery"
+            category = "Grocery",
+            createdAt = now,
+            updatedAt = now
         )
 
         // When
         val statusChanged = goal.processAccountUpdate(
             accountId = "different-account-id",
-            transactionAmount = BigDecimal("-50.00"),
+            transactionAmount = BigDecimal("50.00"),
             transactionType = "DEBIT",
             transactionPurpose = "Aldi purchase",
-            classifications = listOf("Grocery")
+            classifications = listOf("Grocery"),
+            clock = clock
         )
 
         // Then
@@ -234,17 +260,20 @@ class SpendingLimitGoalTest {
             accountId = accountId,
             limit = BigDecimal("400.00"),
             currencyCode = "EUR",
-            category = "Grocery"
+            category = "Grocery",
+            createdAt = now,
+            updatedAt = now
         )
-        goal.updateStatus(GoalStatus.ACHIEVED)
+        goal.updateStatus(GoalStatus.ACHIEVED, clock)
 
         // When
         val statusChanged = goal.processAccountUpdate(
             accountId = accountId,
-            transactionAmount = BigDecimal("-50.00"),
+            transactionAmount = BigDecimal("50.00"),
             transactionType = "DEBIT",
             transactionPurpose = "Aldi purchase",
-            classifications = listOf("Grocery")
+            classifications = listOf("Grocery"),
+            clock = clock
         )
 
         // Then

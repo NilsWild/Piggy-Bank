@@ -6,7 +6,7 @@ import de.rwth.swc.piggybank.goalservice.domain.GoalType
 import de.rwth.swc.piggybank.goalservice.domain.SavingsGoal
 import de.rwth.swc.piggybank.goalservice.domain.SpendingLimitGoal
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.Instant
 import java.util.UUID
 
 /**
@@ -19,11 +19,11 @@ sealed class GoalResponse {
     abstract val description: String?
     abstract val type: GoalType
     abstract val status: GoalStatus
-    abstract val startDate: LocalDateTime
-    abstract val endDate: LocalDateTime
+    abstract val startDate: Instant
+    abstract val endDate: Instant
     abstract val accountId: String
-    abstract val createdAt: LocalDateTime
-    abstract val updatedAt: LocalDateTime
+    abstract val createdAt: Instant
+    abstract val updatedAt: Instant
 }
 
 /**
@@ -35,11 +35,11 @@ data class SpendingLimitGoalResponse(
     override val description: String?,
     override val type: GoalType,
     override val status: GoalStatus,
-    override val startDate: LocalDateTime,
-    override val endDate: LocalDateTime,
+    override val startDate: Instant,
+    override val endDate: Instant,
     override val accountId: String,
-    override val createdAt: LocalDateTime,
-    override val updatedAt: LocalDateTime,
+    override val createdAt: Instant,
+    override val updatedAt: Instant,
     val limit: BigDecimal,
     val currencyCode: String,
     val category: String,
@@ -82,11 +82,11 @@ data class SavingsGoalResponse(
     override val description: String?,
     override val type: GoalType,
     override val status: GoalStatus,
-    override val startDate: LocalDateTime,
-    override val endDate: LocalDateTime,
+    override val startDate: Instant,
+    override val endDate: Instant,
     override val accountId: String,
-    override val createdAt: LocalDateTime,
-    override val updatedAt: LocalDateTime,
+    override val createdAt: Instant,
+    override val updatedAt: Instant,
     val targetAmount: BigDecimal,
     val currencyCode: String,
     val currentAmount: BigDecimal
@@ -125,8 +125,8 @@ data class SavingsGoalResponse(
 sealed class CreateGoalRequest {
     abstract val name: String
     abstract val description: String?
-    abstract val startDate: LocalDateTime
-    abstract val endDate: LocalDateTime
+    abstract val startDate: Instant
+    abstract val endDate: Instant
     abstract val accountId: String
 }
 
@@ -136,8 +136,8 @@ sealed class CreateGoalRequest {
 data class CreateSpendingLimitGoalRequest(
     override val name: String,
     override val description: String? = null,
-    override val startDate: LocalDateTime,
-    override val endDate: LocalDateTime,
+    override val startDate: Instant,
+    override val endDate: Instant,
     override val accountId: String,
     val limit: BigDecimal,
     val currencyCode: String,
@@ -146,9 +146,10 @@ data class CreateSpendingLimitGoalRequest(
     /**
      * Converts this request to a SpendingLimitGoal.
      *
+     * @param clock The clock to use for getting the current time
      * @return The SpendingLimitGoal
      */
-    fun toDomain(): SpendingLimitGoal {
+    fun toDomain(clock: java.time.Clock): SpendingLimitGoal {
         return SpendingLimitGoal(
             name = name,
             description = description,
@@ -157,7 +158,9 @@ data class CreateSpendingLimitGoalRequest(
             accountId = accountId,
             limit = limit,
             currencyCode = currencyCode,
-            category = category
+            category = category,
+            createdAt = Instant.now(clock),
+            updatedAt = Instant.now(clock)
         )
     }
 }
@@ -168,8 +171,8 @@ data class CreateSpendingLimitGoalRequest(
 data class CreateSavingsGoalRequest(
     override val name: String,
     override val description: String? = null,
-    override val startDate: LocalDateTime,
-    override val endDate: LocalDateTime,
+    override val startDate: Instant,
+    override val endDate: Instant,
     override val accountId: String,
     val targetAmount: BigDecimal,
     val currencyCode: String
@@ -177,9 +180,10 @@ data class CreateSavingsGoalRequest(
     /**
      * Converts this request to a SavingsGoal.
      *
+     * @param clock The clock to use for getting the current time
      * @return The SavingsGoal
      */
-    fun toDomain(): SavingsGoal {
+    fun toDomain(clock: java.time.Clock): SavingsGoal {
         return SavingsGoal(
             name = name,
             description = description,
@@ -187,7 +191,9 @@ data class CreateSavingsGoalRequest(
             endDate = endDate,
             accountId = accountId,
             targetAmount = targetAmount,
-            currencyCode = currencyCode
+            currencyCode = currencyCode,
+            createdAt = Instant.now(clock),
+            updatedAt = Instant.now(clock)
         )
     }
 }

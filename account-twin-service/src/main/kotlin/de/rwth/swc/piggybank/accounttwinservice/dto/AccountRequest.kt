@@ -32,7 +32,8 @@ data class AccountRequest(
      */
     fun toDomain(): Account {
         val amount = Amount(initialBalance.value, initialBalance.currencyCode)
-        return Account.create(type, identifier, amount)
+        val id = "$type:$identifier"
+        return Account(id, type, identifier, amount)
     }
 }
 

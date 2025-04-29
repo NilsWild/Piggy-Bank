@@ -11,7 +11,10 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.Clock
+import java.time.Duration
+import java.time.Instant
+import java.time.ZoneId
 import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -21,10 +24,12 @@ class AccountUpdateListenerTest {
     private lateinit var rabbitMQService: RabbitMQService
     private lateinit var transferClassificationCache: TransferClassificationCache
     private lateinit var accountUpdateListener: AccountUpdateListener
+    private lateinit var clock: Clock
 
     private val accountId = "test-account-id"
-    private val now = LocalDateTime.now()
-    private val future = now.plusDays(30)
+    private val fixedInstant = Instant.parse("2023-01-01T12:00:00Z")
+    private val now = fixedInstant
+    private val future = now.plus(Duration.ofDays(30))
     private val transactionId = UUID.randomUUID()
 
     @BeforeEach
@@ -32,10 +37,12 @@ class AccountUpdateListenerTest {
         goalRepository = mockk(relaxed = true)
         rabbitMQService = mockk(relaxed = true)
         transferClassificationCache = mockk(relaxed = true)
+        clock = Clock.fixed(fixedInstant, ZoneId.of("UTC"))
         accountUpdateListener = AccountUpdateListener(
             goalRepository = goalRepository,
             rabbitMQService = rabbitMQService,
-            transferClassificationCache = transferClassificationCache
+            transferClassificationCache = transferClassificationCache,
+            clock = clock
         )
     }
 
@@ -52,7 +59,9 @@ class AccountUpdateListenerTest {
                 accountId = accountId,
                 limit = BigDecimal("400.00"),
                 currencyCode = "EUR",
-                category = "Grocery"
+                category = "Grocery",
+                createdAt = now,
+                updatedAt = now
             )
         )
 
@@ -114,7 +123,9 @@ class AccountUpdateListenerTest {
             accountId = accountId,
             targetAmount = BigDecimal("1000.00"),
             currencyCode = "EUR",
-            currentAmount = BigDecimal("950.00") // Current amount is close to target
+            currentAmount = BigDecimal("950.00"), // Current amount is close to target
+            createdAt = now,
+            updatedAt = now
         )
         val activeGoals = listOf(goal)
 

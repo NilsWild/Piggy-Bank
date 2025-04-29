@@ -1,13 +1,8 @@
 package de.rwth.swc.piggybank.notificationservice.domain
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.EnumType
-import jakarta.persistence.Enumerated
-import jakarta.persistence.Id
-import jakarta.persistence.Table
+import jakarta.persistence.*
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 /**
  * Represents a notification for an account.
@@ -51,21 +46,4 @@ data class Notification(
         return copy(read = true)
     }
 
-    companion object {
-        /**
-         * Creates a new notification.
-         *
-         * @param accountId The identifier of the account
-         * @param eventType The type of event
-         * @param message The notification message
-         * @return The created notification
-         */
-        fun create(accountId: String, eventType: NotificationEventType, message: String): Notification {
-            return Notification(
-                accountId = accountId,
-                eventType = eventType,
-                message = message
-            )
-        }
-    }
 }

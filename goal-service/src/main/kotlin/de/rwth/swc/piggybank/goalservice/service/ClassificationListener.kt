@@ -10,6 +10,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
+import java.time.Clock
 
 /**
  * Service for listening to classification events from RabbitMQ.
@@ -19,7 +20,8 @@ import java.math.BigDecimal
 class ClassificationListener(
     private val goalRepository: GoalRepository,
     private val rabbitMQService: RabbitMQService,
-    private val transferClassificationCache: TransferClassificationCache
+    private val transferClassificationCache: TransferClassificationCache,
+    private val clock: Clock
 ) {
     private val logger = LoggerFactory.getLogger(ClassificationListener::class.java)
 
@@ -72,7 +74,8 @@ class ClassificationListener(
                         transactionAmount = BigDecimal(amount),
                         transactionType = type,
                         transactionPurpose = purpose,
-                        classifications = classifications
+                        classifications = classifications,
+                        clock = clock
                     )
                 } else {
                     // Skip non-SpendingLimitGoal goals as they have already been processed by the AccountUpdateListener
