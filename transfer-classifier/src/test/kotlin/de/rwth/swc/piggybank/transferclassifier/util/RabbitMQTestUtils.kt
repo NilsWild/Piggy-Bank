@@ -1,10 +1,13 @@
 package de.rwth.swc.piggybank.transferclassifier.util
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.awaitility.Awaitility.await
+import org.awaitility.core.ConditionTimeoutException
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.Message
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Utility class for testing RabbitMQ.
@@ -27,17 +30,25 @@ object RabbitMQTestUtils {
         timeout: Long,
         unit: TimeUnit
     ): Message? {
-        val endTime = System.currentTimeMillis() + unit.toMillis(timeout)
-        while (System.currentTimeMillis() < endTime) {
-            val message = rabbitTemplate.receive(queueName)
-            if (message != null) {
-                log.info("Received message from queue {}: {}", queueName, String(message.body))
-                return message
-            }
-            Thread.sleep(100)
+        val messageRef = AtomicReference<Message>()
+        try {
+            await().atMost(timeout, unit)
+                .pollInterval(100, TimeUnit.MILLISECONDS)
+                .until {
+                    val message = rabbitTemplate.receive(queueName)
+                    if (message != null) {
+                        log.info("Received message from queue {}: {}", queueName, String(message.body))
+                        messageRef.set(message)
+                        true
+                    } else {
+                        false
+                    }
+                }
+            return messageRef.get()
+        } catch (e: ConditionTimeoutException) {
+            log.warn("No message received from queue {} within {} {}", queueName, timeout, unit)
+            return null
         }
-        log.warn("No message received from queue {} within {} {}", queueName, timeout, unit)
-        return null
     }
 
     /**
@@ -55,20 +66,30 @@ object RabbitMQTestUtils {
         timeout: Long,
         unit: TimeUnit
     ): Message? {
-        val endTime = System.currentTimeMillis() + unit.toMillis(timeout)
-        while (System.currentTimeMillis() < endTime) {
-            val message = rabbitTemplate.receive("test_queue")
-            if (message != null) {
-                val messageBody = String(message.body)
-                log.info("Received message: {}", messageBody)
-                if (messageBody.contains("\"eventType\":\"$eventType\"")) {
-                    return message
+        val messageRef = AtomicReference<Message>()
+        try {
+            await().atMost(timeout, unit)
+                .pollInterval(100, TimeUnit.MILLISECONDS)
+                .until {
+                    val message = rabbitTemplate.receive("test_queue")
+                    if (message != null) {
+                        val messageBody = String(message.body)
+                        log.info("Received message: {}", messageBody)
+                        if (messageBody.contains("\"eventType\":\"$eventType\"")) {
+                            messageRef.set(message)
+                            true
+                        } else {
+                            false
+                        }
+                    } else {
+                        false
+                    }
                 }
-            }
-            Thread.sleep(100)
+            return messageRef.get()
+        } catch (e: ConditionTimeoutException) {
+            log.warn("No message with event type {} received within {} {}", eventType, timeout, unit)
+            return null
         }
-        log.warn("No message with event type {} received within {} {}", eventType, timeout, unit)
-        return null
     }
 
     /**
@@ -88,19 +109,29 @@ object RabbitMQTestUtils {
         timeout: Long,
         unit: TimeUnit
     ): Message? {
-        val endTime = System.currentTimeMillis() + unit.toMillis(timeout)
-        while (System.currentTimeMillis() < endTime) {
-            val message = rabbitTemplate.receive(queueName)
-            if (message != null) {
-                val messageBody = String(message.body)
-                log.info("Received message from queue {}: {}", queueName, messageBody)
-                if (predicate(messageBody)) {
-                    return message
+        val messageRef = AtomicReference<Message>()
+        try {
+            await().atMost(timeout, unit)
+                .pollInterval(100, TimeUnit.MILLISECONDS)
+                .until {
+                    val message = rabbitTemplate.receive(queueName)
+                    if (message != null) {
+                        val messageBody = String(message.body)
+                        log.info("Received message from queue {}: {}", queueName, messageBody)
+                        if (predicate(messageBody)) {
+                            messageRef.set(message)
+                            true
+                        } else {
+                            false
+                        }
+                    } else {
+                        false
+                    }
                 }
-            }
-            Thread.sleep(100)
+            return messageRef.get()
+        } catch (e: ConditionTimeoutException) {
+            log.warn("No matching message received from queue {} within {} {}", queueName, timeout, unit)
+            return null
         }
-        log.warn("No matching message received from queue {} within {} {}", queueName, timeout, unit)
-        return null
     }
 }
