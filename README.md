@@ -103,13 +103,33 @@ mvn spring-boot:run -pl transfer-gateway
 
 The backend services can also be run using Docker. To build and run the services using Docker, follow these steps:
 
-1. Using the start-services.sh script (recommended):
+1. Using the start-services scripts (recommended):
 
+For Linux/Mac:
 ```bash
 ./start-services.sh
 ```
 
-This script will check if Docker and docker-compose are available, rebuild containers if anything has changed, start all services, and display their status.
+For Windows:
+```
+start-services.bat
+```
+
+These scripts will check if Docker and docker-compose are available, rebuild containers if anything has changed, start all services, and display their status.
+
+The Windows script (start-services.bat) supports the following options:
+- `start-services.bat` - Start services, only rebuilding those that have changed
+- `start-services.bat --force` - Force rebuild of all services regardless of changes
+- `start-services.bat --clean` - Remove timestamp files and exit (forces rebuild on next run)
+- `start-services.bat --help` - Show the help message
+
+The script uses timestamp files (.service_name_last_build) to track when each service was last built and only rebuilds services that have changed since the last build, which significantly improves startup time during development.
+
+**Troubleshooting the Windows script:**
+- If you see only the help message when running the script without arguments, make sure you're running it from the repository root directory.
+- If Docker isn't starting, ensure Docker Desktop is running before executing the script.
+- If you encounter errors about services not being rebuilt correctly, try running `start-services.bat --clean` followed by `start-services.bat` to force a complete rebuild.
+- For permission issues, try running the Command Prompt or PowerShell as Administrator.
 
 2. Alternatively, you can use docker-compose directly:
 
