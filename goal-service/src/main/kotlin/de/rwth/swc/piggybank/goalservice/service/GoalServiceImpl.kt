@@ -25,6 +25,7 @@ class GoalServiceImpl(
     private val goalRepository: GoalRepository,
     private val spendingLimitGoalRepository: SpendingLimitGoalRepository,
     private val savingsGoalRepository: SavingsGoalRepository,
+    private val rabbitMQService: RabbitMQService,
     private val clock: Clock
 ) : GoalService {
     private val logger = LoggerFactory.getLogger(GoalServiceImpl::class.java)
@@ -167,7 +168,18 @@ class GoalServiceImpl(
         logger.info("Updating goal status: {} -> {}", id, status)
         val goal = goalRepository.findById(id).orElse(null) ?: return null
         goal.updateStatus(status, clock)
-        return goalRepository.save(goal)
+        val savedGoal = goalRepository.save(goal)
+
+        // Send event to RabbitMQ
+        try {
+            rabbitMQService.sendGoalStatusEvent(savedGoal)
+            logger.info("Goal status event sent for goal: {}", savedGoal.id)
+        } catch (e: Exception) {
+            logger.error("Failed to send goal status event", e)
+            // Don't rethrow the exception to avoid affecting the main operation
+        }
+
+        return savedGoal
     }
 
     /**

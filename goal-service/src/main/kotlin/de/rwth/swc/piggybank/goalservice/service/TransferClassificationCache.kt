@@ -245,4 +245,16 @@ class TransferClassificationCache {
     fun mapTransactionToTransfer(transactionId: UUID, transferId: UUID) {
         transactionToTransferMap[transactionId] = transferId
     }
+
+    /**
+     * Clears all cached transfer information.
+     */
+    fun clear() {
+        transferAccountMap.clear()
+        transferAmountMap.clear()
+        transferTypeMap.clear()
+        transferPurposeMap.clear()
+        transactionToTransferMap.clear()
+        transferClassificationsMap.clear()
+    }
 }

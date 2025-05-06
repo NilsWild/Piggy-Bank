@@ -10,6 +10,7 @@ import de.rwth.swc.piggybank.goalservice.repository.SavingsGoalRepository
 import de.rwth.swc.piggybank.goalservice.repository.SpendingLimitGoalRepository
 import io.kotest.matchers.shouldBe
 import io.mockk.every
+import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
@@ -30,6 +31,7 @@ class GoalServiceTest {
     private lateinit var goalRepository: GoalRepository
     private lateinit var spendingLimitGoalRepository: SpendingLimitGoalRepository
     private lateinit var savingsGoalRepository: SavingsGoalRepository
+    private lateinit var rabbitMQService: RabbitMQService
     private lateinit var goalService: GoalService
     private lateinit var clock: Clock
 
@@ -42,11 +44,13 @@ class GoalServiceTest {
         goalRepository = mockk(relaxed = true)
         spendingLimitGoalRepository = mockk(relaxed = true)
         savingsGoalRepository = mockk(relaxed = true)
+        rabbitMQService = mockk(relaxed = true)
         clock = Clock.fixed(Instant.parse("2023-01-01T12:00:00Z"), ZoneId.of("UTC"))
         goalService = GoalServiceImpl(
             goalRepository = goalRepository,
             spendingLimitGoalRepository = spendingLimitGoalRepository,
             savingsGoalRepository = savingsGoalRepository,
+            rabbitMQService = rabbitMQService,
             clock = clock
         )
     }
@@ -327,6 +331,7 @@ class GoalServiceTest {
 
         every { goalRepository.findById(goalId) } returns Optional.of(goal)
         every { goalRepository.save(any()) } returns goal
+        justRun { rabbitMQService.sendGoalStatusEvent(any()) }
 
         // When
         val result = goalService.updateGoalStatus(goalId, status)
@@ -335,6 +340,7 @@ class GoalServiceTest {
         result shouldBe goal
         result?.status shouldBe status
         verify { goalRepository.save(goal) }
+        verify { rabbitMQService.sendGoalStatusEvent(goal) }
     }
 
     @Test
