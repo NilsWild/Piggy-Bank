@@ -29,9 +29,16 @@ const Layout = () => {
       }
     });
 
-    // Clean up WebSocket connection when component unmounts
+    // Subscribe to notification updates (when notifications are marked as read)
+    const handleNotificationUpdate = () => {
+      fetchUnreadCount();
+    };
+    notificationService.addNotificationUpdateListener(handleNotificationUpdate);
+
+    // Clean up WebSocket connection and event listener when component unmounts
     return () => {
       closeConnection();
+      notificationService.removeNotificationUpdateListener(handleNotificationUpdate);
     };
   }, []);
 

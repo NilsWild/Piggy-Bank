@@ -16,6 +16,7 @@ import {
   Alert,
   CircularProgress,
   FormControl,
+  FormControlLabel,
   InputLabel,
   Select,
   MenuItem,
@@ -25,7 +26,8 @@ import {
   IconButton,
   Tooltip,
   FormHelperText,
-  Divider
+  Divider,
+  Switch
 } from '@mui/material';
 // Removed date picker imports to simplify implementation
 import AddIcon from '@mui/icons-material/Add';
@@ -35,6 +37,9 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import SavingsIcon from '@mui/icons-material/Savings';
 import MoneyOffIcon from '@mui/icons-material/MoneyOff';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
+import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import { 
   Goal, 
   GoalStatus, 
@@ -43,10 +48,14 @@ import {
   SpendingLimitGoal, 
   CreateSavingsGoalRequest, 
   CreateSpendingLimitGoalRequest,
-  Amount
+  Amount,
+  NotificationEventType,
+  NotificationSubscriptionRequest,
+  NotificationSubscription
 } from '../types';
 import * as goalService from '../services/goalService';
 import * as accountService from '../services/accountService';
+import * as notificationService from '../services/notificationService';
 
 // Interface for the tab panel props
 interface TabPanelProps {
@@ -400,6 +409,15 @@ const GoalsPage = () => {
     [key: string]: SavingsGoal | SpendingLimitGoal;
   }>({});
 
+  // State for notification subscriptions
+  const [goalUpdateSubscribed, setGoalUpdateSubscribed] = useState(false);
+  const [goalAchievedSubscribed, setGoalAchievedSubscribed] = useState(false);
+  const [goalFailedSubscribed, setGoalFailedSubscribed] = useState(false);
+  const [subscriptionIds, setSubscriptionIds] = useState<{
+    [key in NotificationEventType]?: string;
+  }>({});
+  const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+
   // Function to fetch detailed goal information
   const fetchDetailedGoalInfo = async (goal: Goal) => {
     try {
@@ -558,6 +576,172 @@ const GoalsPage = () => {
     );
   };
 
+  // Function to fetch subscription status for a goal's account
+  const fetchSubscriptionStatus = async (accountId: string) => {
+    try {
+      setSubscriptionLoading(true);
+      const subscriptions = await notificationService.getAccountSubscriptions(accountId);
+
+      // Reset subscription states
+      setGoalUpdateSubscribed(false);
+      setGoalAchievedSubscribed(false);
+      setGoalFailedSubscribed(false);
+      const newSubscriptionIds: { [key in NotificationEventType]?: string } = {};
+
+      // Check for active subscriptions
+      subscriptions.forEach(sub => {
+        if (sub.active) {
+          if (sub.eventType === NotificationEventType.GOAL_UPDATE) {
+            setGoalUpdateSubscribed(true);
+            newSubscriptionIds[NotificationEventType.GOAL_UPDATE] = sub.id;
+          } else if (sub.eventType === NotificationEventType.GOAL_ACHIEVED) {
+            setGoalAchievedSubscribed(true);
+            newSubscriptionIds[NotificationEventType.GOAL_ACHIEVED] = sub.id;
+          } else if (sub.eventType === NotificationEventType.GOAL_FAILED) {
+            setGoalFailedSubscribed(true);
+            newSubscriptionIds[NotificationEventType.GOAL_FAILED] = sub.id;
+          }
+        }
+      });
+
+      setSubscriptionIds(newSubscriptionIds);
+    } catch (err) {
+      console.error('Failed to fetch subscription status:', err);
+      // Don't show an error message to the user, just assume they're not subscribed
+    } finally {
+      setSubscriptionLoading(false);
+    }
+  };
+
+  // Function to toggle goal update subscription
+  const handleToggleGoalUpdateSubscription = async (accountId: string) => {
+    try {
+      setSubscriptionLoading(true);
+
+      if (goalUpdateSubscribed && subscriptionIds[NotificationEventType.GOAL_UPDATE]) {
+        // Unsubscribe
+        await notificationService.deactivateSubscription(subscriptionIds[NotificationEventType.GOAL_UPDATE]);
+        setGoalUpdateSubscribed(false);
+        setSubscriptionIds(prev => {
+          const newIds = { ...prev };
+          delete newIds[NotificationEventType.GOAL_UPDATE];
+          return newIds;
+        });
+        setSnackbarMessage('Goal update notifications disabled');
+      } else {
+        // Subscribe
+        const request: NotificationSubscriptionRequest = {
+          accountId,
+          eventType: NotificationEventType.GOAL_UPDATE
+        };
+
+        const response = await notificationService.createSubscription(request);
+        setGoalUpdateSubscribed(true);
+        setSubscriptionIds(prev => ({
+          ...prev,
+          [NotificationEventType.GOAL_UPDATE]: response.id
+        }));
+        setSnackbarMessage('Goal update notifications enabled');
+      }
+
+      setSnackbarSeverity('success');
+      setOpenSnackbar(true);
+    } catch (err) {
+      console.error('Failed to toggle goal update subscription:', err);
+      setSnackbarMessage('Failed to update notification settings');
+      setSnackbarSeverity('error');
+      setOpenSnackbar(true);
+    } finally {
+      setSubscriptionLoading(false);
+    }
+  };
+
+  // Function to toggle goal achieved subscription
+  const handleToggleGoalAchievedSubscription = async (accountId: string) => {
+    try {
+      setSubscriptionLoading(true);
+
+      if (goalAchievedSubscribed && subscriptionIds[NotificationEventType.GOAL_ACHIEVED]) {
+        // Unsubscribe
+        await notificationService.deactivateSubscription(subscriptionIds[NotificationEventType.GOAL_ACHIEVED]);
+        setGoalAchievedSubscribed(false);
+        setSubscriptionIds(prev => {
+          const newIds = { ...prev };
+          delete newIds[NotificationEventType.GOAL_ACHIEVED];
+          return newIds;
+        });
+        setSnackbarMessage('Goal achievement notifications disabled');
+      } else {
+        // Subscribe
+        const request: NotificationSubscriptionRequest = {
+          accountId,
+          eventType: NotificationEventType.GOAL_ACHIEVED
+        };
+
+        const response = await notificationService.createSubscription(request);
+        setGoalAchievedSubscribed(true);
+        setSubscriptionIds(prev => ({
+          ...prev,
+          [NotificationEventType.GOAL_ACHIEVED]: response.id
+        }));
+        setSnackbarMessage('Goal achievement notifications enabled');
+      }
+
+      setSnackbarSeverity('success');
+      setOpenSnackbar(true);
+    } catch (err) {
+      console.error('Failed to toggle goal achieved subscription:', err);
+      setSnackbarMessage('Failed to update notification settings');
+      setSnackbarSeverity('error');
+      setOpenSnackbar(true);
+    } finally {
+      setSubscriptionLoading(false);
+    }
+  };
+
+  // Function to toggle goal failed subscription
+  const handleToggleGoalFailedSubscription = async (accountId: string) => {
+    try {
+      setSubscriptionLoading(true);
+
+      if (goalFailedSubscribed && subscriptionIds[NotificationEventType.GOAL_FAILED]) {
+        // Unsubscribe
+        await notificationService.deactivateSubscription(subscriptionIds[NotificationEventType.GOAL_FAILED]);
+        setGoalFailedSubscribed(false);
+        setSubscriptionIds(prev => {
+          const newIds = { ...prev };
+          delete newIds[NotificationEventType.GOAL_FAILED];
+          return newIds;
+        });
+        setSnackbarMessage('Goal failure notifications disabled');
+      } else {
+        // Subscribe
+        const request: NotificationSubscriptionRequest = {
+          accountId,
+          eventType: NotificationEventType.GOAL_FAILED
+        };
+
+        const response = await notificationService.createSubscription(request);
+        setGoalFailedSubscribed(true);
+        setSubscriptionIds(prev => ({
+          ...prev,
+          [NotificationEventType.GOAL_FAILED]: response.id
+        }));
+        setSnackbarMessage('Goal failure notifications enabled');
+      }
+
+      setSnackbarSeverity('success');
+      setOpenSnackbar(true);
+    } catch (err) {
+      console.error('Failed to toggle goal failed subscription:', err);
+      setSnackbarMessage('Failed to update notification settings');
+      setSnackbarSeverity('error');
+      setOpenSnackbar(true);
+    } finally {
+      setSubscriptionLoading(false);
+    }
+  };
+
   // Function to view goal details
   const handleViewGoalDetails = async (goalId: string) => {
     try {
@@ -582,6 +766,9 @@ const GoalsPage = () => {
         const spendingLimitGoal = await goalService.getSpendingLimitGoalById(goalId);
         setSelectedGoalDetails(spendingLimitGoal);
       }
+
+      // Fetch subscription status for this goal's account
+      await fetchSubscriptionStatus(goal.accountId);
 
       setOpenDetailsDialog(true);
     } catch (err) {
@@ -796,6 +983,101 @@ const GoalsPage = () => {
                   </Box>
                 </Box>
               )}
+
+              {/* Notification Settings Section */}
+              <Divider sx={{ my: 3 }} />
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                Notification Settings
+              </Typography>
+
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {/* Goal Update Notifications */}
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={goalUpdateSubscribed}
+                      onChange={() => handleToggleGoalUpdateSubscription(selectedGoal.accountId)}
+                      disabled={subscriptionLoading}
+                      color="primary"
+                    />
+                  }
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      {goalUpdateSubscribed ? (
+                        <>
+                          <NotificationsIcon color="primary" sx={{ mr: 1 }} />
+                          <Typography>Goal update notifications enabled</Typography>
+                        </>
+                      ) : (
+                        <>
+                          <NotificationsOffIcon sx={{ mr: 1 }} />
+                          <Typography>Goal update notifications disabled</Typography>
+                        </>
+                      )}
+                    </Box>
+                  }
+                />
+
+                {/* Goal Achievement Notifications */}
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={goalAchievedSubscribed}
+                      onChange={() => handleToggleGoalAchievedSubscription(selectedGoal.accountId)}
+                      disabled={subscriptionLoading}
+                      color="success"
+                    />
+                  }
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      {goalAchievedSubscribed ? (
+                        <>
+                          <NotificationsActiveIcon color="success" sx={{ mr: 1 }} />
+                          <Typography>Goal achievement notifications enabled</Typography>
+                        </>
+                      ) : (
+                        <>
+                          <NotificationsOffIcon sx={{ mr: 1 }} />
+                          <Typography>Goal achievement notifications disabled</Typography>
+                        </>
+                      )}
+                    </Box>
+                  }
+                />
+
+                {/* Goal Failure Notifications */}
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={goalFailedSubscribed}
+                      onChange={() => handleToggleGoalFailedSubscription(selectedGoal.accountId)}
+                      disabled={subscriptionLoading}
+                      color="error"
+                    />
+                  }
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      {goalFailedSubscribed ? (
+                        <>
+                          <NotificationsActiveIcon color="error" sx={{ mr: 1 }} />
+                          <Typography>Goal failure notifications enabled</Typography>
+                        </>
+                      ) : (
+                        <>
+                          <NotificationsOffIcon sx={{ mr: 1 }} />
+                          <Typography>Goal failure notifications disabled</Typography>
+                        </>
+                      )}
+                    </Box>
+                  }
+                />
+
+                {subscriptionLoading && (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
+                    <CircularProgress size={24} />
+                  </Box>
+                )}
+              </Box>
             </Box>
           )}
         </DialogContent>

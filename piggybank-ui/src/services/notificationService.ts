@@ -12,6 +12,25 @@ import {
   UnreadNotificationCount 
 } from '../types';
 
+// Simple event system for notification updates
+type NotificationUpdateListener = () => void;
+const notificationUpdateListeners: NotificationUpdateListener[] = [];
+
+export const addNotificationUpdateListener = (listener: NotificationUpdateListener): void => {
+  notificationUpdateListeners.push(listener);
+};
+
+export const removeNotificationUpdateListener = (listener: NotificationUpdateListener): void => {
+  const index = notificationUpdateListeners.indexOf(listener);
+  if (index !== -1) {
+    notificationUpdateListeners.splice(index, 1);
+  }
+};
+
+const notifyNotificationUpdate = (): void => {
+  notificationUpdateListeners.forEach(listener => listener());
+};
+
 const NOTIFICATIONS_API_URL = '/api/notifications';
 const SUBSCRIPTIONS_API_URL = '/api/subscriptions';
 
@@ -64,6 +83,8 @@ export const getUnreadNotificationsForAccount = async (
 
 export const markNotificationAsRead = async (notificationId: string): Promise<void> => {
   await axios.post(`${NOTIFICATIONS_API_URL}/${notificationId}/read`);
+  // Notify listeners that a notification has been marked as read
+  notifyNotificationUpdate();
 };
 
 export const countUnreadNotifications = async (): Promise<UnreadNotificationCount> => {
