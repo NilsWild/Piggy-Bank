@@ -219,7 +219,7 @@ class NotificationControllerInterACtTest {
         message: String,
         accountId: String,
         read: Boolean,
-        id: UUID = UUID.fromString("00000000-0000-0000-0000-000000000002")
+        id: UUID = UUID.randomUUID()
     ): Notification {
         val notification = Notification(
             id = id,

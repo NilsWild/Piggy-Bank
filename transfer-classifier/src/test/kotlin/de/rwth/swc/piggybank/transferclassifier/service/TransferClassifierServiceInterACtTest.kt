@@ -1,6 +1,7 @@
 package de.rwth.swc.piggybank.transferclassifier.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import de.interact.amqp.TestAmqpClient
 import de.interact.amqp.observer.SpringAMQPInterACtObserverConfiguration
 import de.interact.domain.amqp.AmqpMessage
 import de.interact.junit.jupiter.annotation.InterACtTest
@@ -49,28 +50,19 @@ class TransferClassifierServiceInterACtTest {
     @Autowired
     private lateinit var rabbitTemplate: RabbitTemplate
 
-    @BeforeEach
-    fun setUp() {
-        // Clear any existing messages in the queues
-        while (rabbitTemplate.receive(RabbitMQConfig.TRANSFER_QUEUE_NAME) != null) {
-            // Do nothing, just drain the queue
-        }
-        while (rabbitTemplate.receive(RabbitMQTestConfig.TEST_QUEUE_NAME) != null) {
-            // Do nothing, just drain the queue
-        }
-    }
+    @Autowired
+    private lateinit var testAmqpClient: TestAmqpClient
 
     @InterACtTest
-    @ParameterizedTest
     @MethodSource("transferWithGroceryKeywords")
     fun `should classify transfer with grocery keywords`(transferStimulus: AmqpMessage<Transfer>) {
         val transfer = transferStimulus.body
 
         // Send the transfer to the queue
-        rabbitTemplate.convertAndSend(
+        testAmqpClient.send(
             RabbitMQConfig.TRANSFER_EXCHANGE_NAME,
             RabbitMQConfig.TRANSFER_ROUTING_KEY,
-            transfer
+            transferStimulus
         )
 
         // Wait for the classification result
@@ -91,16 +83,15 @@ class TransferClassifierServiceInterACtTest {
     }
 
     @InterACtTest
-    @ParameterizedTest
     @MethodSource("transferWithHolidayKeywords")
     fun `should classify transfer with holiday keywords`(transferStimulus: AmqpMessage<Transfer>) {
         val transfer = transferStimulus.body
 
         // Send the transfer to the queue
-        rabbitTemplate.convertAndSend(
+        testAmqpClient.send(
             RabbitMQConfig.TRANSFER_EXCHANGE_NAME,
             RabbitMQConfig.TRANSFER_ROUTING_KEY,
-            transfer
+            transferStimulus
         )
 
         // Wait for the classification result
@@ -121,16 +112,15 @@ class TransferClassifierServiceInterACtTest {
     }
 
     @InterACtTest
-    @ParameterizedTest
     @MethodSource("transferWithBothKeywords")
     fun `should classify transfer with both grocery and holiday keywords`(transferStimulus: AmqpMessage<Transfer>) {
         val transfer = transferStimulus.body
 
         // Send the transfer to the queue
-        rabbitTemplate.convertAndSend(
+        testAmqpClient.send(
             RabbitMQConfig.TRANSFER_EXCHANGE_NAME,
             RabbitMQConfig.TRANSFER_ROUTING_KEY,
-            transfer
+            transferStimulus
         )
 
         // Wait for the classification result
@@ -151,16 +141,15 @@ class TransferClassifierServiceInterACtTest {
     }
 
     @InterACtTest
-    @ParameterizedTest
     @MethodSource("transferWithoutKeywords")
     fun `should classify transfer without keywords`(transferStimulus: AmqpMessage<Transfer>) {
         val transfer = transferStimulus.body
 
         // Send the transfer to the queue
-        rabbitTemplate.convertAndSend(
+        testAmqpClient.send(
             RabbitMQConfig.TRANSFER_EXCHANGE_NAME,
             RabbitMQConfig.TRANSFER_ROUTING_KEY,
-            transfer
+            transferStimulus
         )
 
         // Wait for the classification result

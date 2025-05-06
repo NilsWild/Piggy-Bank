@@ -67,7 +67,7 @@ class AccountControllerInterACtTest {
 
     @InterACtTest
     @MethodSource("createAccountRequests")
-    fun `should create account with different parameters`(
+    fun `should create account`(
         accountRequestStimulus: RestMessage.Request<AccountRequest>,
         transferGatewayResponse: RestMessage.Response<Boolean>
     ) {
@@ -76,7 +76,7 @@ class AccountControllerInterACtTest {
         // Set up the MockServer to respond to the TransferGateway request
         try {
             MockServerConfig.setupAddMonitoredAccountExpectation(
-                responseBody = transferGatewayResponse.body ?: true,
+                responseBody = transferGatewayResponse.body!!,
                 statusCode = transferGatewayResponse.statusCode
             )
         } catch (e: Exception) {

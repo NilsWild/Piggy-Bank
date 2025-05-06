@@ -16,10 +16,13 @@ import de.rwth.swc.piggybank.goalservice.domain.GoalStatus
 import de.rwth.swc.piggybank.goalservice.domain.SavingsGoal
 import de.rwth.swc.piggybank.goalservice.domain.SpendingLimitGoal
 import de.rwth.swc.piggybank.goalservice.dto.AccountUpdatedEvent
+import de.rwth.swc.piggybank.goalservice.dto.ClassificationEvent
 import de.rwth.swc.piggybank.goalservice.dto.TransactionAmountDto
 import de.rwth.swc.piggybank.goalservice.repository.GoalRepository
+import de.rwth.swc.piggybank.goalservice.util.RabbitMQTestUtils
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldContain
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -27,6 +30,7 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
 import org.springframework.test.annotation.DirtiesContext
@@ -57,7 +61,14 @@ class AccountUpdateListenerInterACtTest {
     private lateinit var rabbitTemplate: TestAmqpClient
 
     @Autowired
+    @Qualifier("rabbitTemplate")
+    private lateinit var rabbitTemplateForReceiving: RabbitTemplate
+
+    @Autowired
     private lateinit var goalRepository: GoalRepository
+
+    @Autowired
+    private lateinit var transferClassificationCache: TransferClassificationCache
 
     @Autowired
     private lateinit var clock: Clock
@@ -65,6 +76,7 @@ class AccountUpdateListenerInterACtTest {
     @BeforeEach
     fun setUp() {
         goalRepository.deleteAll()
+        transferClassificationCache.clear()
     }
 
     @InterACtTest
@@ -92,8 +104,6 @@ class AccountUpdateListenerInterACtTest {
         updatedGoal shouldNotBe null
         updatedGoal as SavingsGoal
         updatedGoal.currentAmount shouldBe BigDecimal("100.00")
-
-
     }
 
     @InterACtTest
@@ -134,6 +144,145 @@ class AccountUpdateListenerInterACtTest {
         updatedGoal as SavingsGoal
         updatedGoal.currentAmount shouldBe BigDecimal("1000.00")
         updatedGoal.status shouldBe GoalStatus.ACHIEVED
+
+        // Verify that a GOAL_ACHIEVED event was sent to RabbitMQ
+        val message = RabbitMQTestUtils.waitForEventType(rabbitTemplateForReceiving, "GOAL_ACHIEVED", 2, TimeUnit.SECONDS)
+        message shouldNotBe null
+
+        // Convert the message body to a string and verify it contains the expected data
+        val messageBody = String(message!!.body)
+        messageBody shouldContain "\"eventType\":\"GOAL_ACHIEVED\""
+        messageBody shouldContain "\"goalId\":\"${goal.id}\""
+        messageBody shouldContain "\"goalName\":\"${goal.name}\""
+        messageBody shouldContain "\"accountId\":\"$accountId\""
+        messageBody shouldContain "\"goalStatus\":\"ACHIEVED\""
+    }
+
+    @InterACtTest
+    @MethodSource("accountUpdatedEventForSpendingLimitGoal")
+    fun `should process account update event for spending limit goal`(eventStimulus: AmqpMessage<AccountUpdatedEvent>){
+        // Create a spending limit goal
+        val accountId = eventStimulus.body.accountId
+        val goal = createTestSpendingLimitGoal(accountId)
+
+        // Extract transfer ID from the event
+        val transferId = UUID.fromString(eventStimulus.body.transferId)
+
+        // Store classifications in the cache
+        transferClassificationCache.storeClassifications(
+            transferId = transferId,
+            classifications = listOf("Grocery")
+        )
+
+        // Send only the account update event via RabbitMQ
+        rabbitTemplate.send(
+            RabbitMQConfig.ACCOUNT_EXCHANGE_NAME,
+            RabbitMQConfig.ACCOUNT_UPDATED_ROUTING_KEY,
+            eventStimulus
+        )
+
+        // Wait for the goal to be updated
+        await().atMost(5, TimeUnit.SECONDS).until {
+            val updatedGoal = goalRepository.findById(goal.id).orElse(null) as? SpendingLimitGoal
+            updatedGoal?.currentSpending == BigDecimal("50.00")
+        }
+
+        // Verify the goal was updated
+        val updatedGoal = goalRepository.findById(goal.id).orElse(null)
+        updatedGoal shouldNotBe null
+        updatedGoal as SpendingLimitGoal
+        updatedGoal.currentSpending shouldBe BigDecimal("50.00")
+    }
+
+    @InterACtTest
+    @MethodSource("classificationEventForSpendingLimitGoal")
+    fun `should process classification event when transfer is already in cache`(eventStimulus: AmqpMessage<ClassificationEvent>){
+        // Create a spending limit goal
+        val accountId = "test-account-123" // Same as in accountUpdatedEventForSpendingLimitGoal
+        val goal = createTestSpendingLimitGoal(accountId)
+
+        // Extract transfer ID from the event
+        val transferId = eventStimulus.body.transferId
+
+        // Set up the transfer in the cache first
+        transferClassificationCache.storeTransferInfo(
+            transferId = transferId,
+            accountId = accountId,
+            amount = "-50.00", // Same as in accountUpdatedEventForSpendingLimitGoal
+            type = "DEBIT", // Same as in accountUpdatedEventForSpendingLimitGoal
+            purpose = "Grocery shopping" // Same as in accountUpdatedEventForSpendingLimitGoal
+        )
+
+        // Send only the classification event via RabbitMQ
+        rabbitTemplate.send(
+            RabbitMQConfig.CLASSIFICATION_EXCHANGE_NAME,
+            RabbitMQConfig.CLASSIFICATION_ROUTING_KEY,
+            eventStimulus
+        )
+
+        // Wait for the goal to be updated
+        await().atMost(5, TimeUnit.SECONDS).until {
+            val updatedGoal = goalRepository.findById(goal.id).orElse(null) as? SpendingLimitGoal
+            updatedGoal?.currentSpending == BigDecimal("50.00")
+        }
+
+        // Verify the goal was updated
+        val updatedGoal = goalRepository.findById(goal.id).orElse(null)
+        updatedGoal shouldNotBe null
+        updatedGoal as SpendingLimitGoal
+        updatedGoal.currentSpending shouldBe BigDecimal("50.00")
+    }
+
+    @InterACtTest
+    @MethodSource("classificationEventForExceedingSpendingLimitGoal")
+    fun `should fail spending limit goal when spending exceeds limit`(eventStimulus: AmqpMessage<ClassificationEvent>){
+        // Create a spending limit goal with a low limit
+        val accountId = "test-account-123"
+        val goal = createTestSpendingLimitGoalWithLowLimit(accountId)
+
+        // Extract transfer ID from the event
+        val transferId = eventStimulus.body.transferId
+
+        // Set up the transfer in the cache with an amount that exceeds the limit
+        transferClassificationCache.storeTransferInfo(
+            transferId = transferId,
+            accountId = accountId,
+            amount = "120.00", // This exceeds the limit of 100.00
+            type = "DEBIT",
+            purpose = "Grocery shopping"
+        )
+
+        // Send only the classification event via RabbitMQ
+        rabbitTemplate.send(
+            RabbitMQConfig.CLASSIFICATION_EXCHANGE_NAME,
+            RabbitMQConfig.CLASSIFICATION_ROUTING_KEY,
+            eventStimulus
+        )
+
+        // Wait for the goal to be updated and marked as failed
+        await().atMost(5, TimeUnit.SECONDS).until {
+            val updatedGoal = goalRepository.findById(goal.id).orElse(null) as? SpendingLimitGoal
+            updatedGoal?.currentSpending == BigDecimal("120.00") && updatedGoal.status == GoalStatus.FAILED
+        }
+
+        // Verify the goal was updated and marked as failed
+        val updatedGoal = goalRepository.findById(goal.id).orElse(null)
+        updatedGoal shouldNotBe null
+        updatedGoal as SpendingLimitGoal
+        updatedGoal.currentSpending shouldBe BigDecimal("120.00")
+        updatedGoal.status shouldBe GoalStatus.FAILED
+
+        // Verify that a GOAL_FAILED event was sent to RabbitMQ
+        val message = RabbitMQTestUtils.waitForEventType(rabbitTemplateForReceiving, "GOAL_FAILED", 2, TimeUnit.SECONDS)
+        message shouldNotBe null
+
+        // Convert the message body to a string and verify it contains the expected data
+        val messageBody = String(message!!.body)
+        messageBody shouldContain "\"eventType\":\"GOAL_FAILED\""
+        messageBody shouldContain "\"goalId\":\"${goal.id}\""
+        messageBody shouldContain "\"goalName\":\"${goal.name}\""
+        messageBody shouldContain "\"accountId\":\"$accountId\""
+        messageBody shouldContain "\"goalStatus\":\"FAILED\""
     }
 
     fun accountUpdatedEventForSavingsGoal(): Stream<Arguments> {
@@ -169,8 +318,8 @@ class AccountUpdateListenerInterACtTest {
     }
 
     fun accountUpdatedEventForSavingsGoalAchievement(): Stream<Arguments> {
-        val transactionId = UUID.randomUUID()
-        val transferId = UUID.randomUUID()
+        val transactionId = UUID.fromString("7a2c259a-f63a-4951-a876-a2e8a7d1399b")
+        val transferId = UUID.fromString("df522f72-a23c-439b-bf8d-2cc0e7257551")
 
         return Stream.of(
             Arguments.of(
@@ -201,8 +350,8 @@ class AccountUpdateListenerInterACtTest {
     }
 
     fun accountUpdatedEventForSpendingLimitGoal(): Stream<Arguments> {
-        val transactionId = UUID.randomUUID()
-        val transferId = UUID.randomUUID()
+        val transactionId = UUID.fromString("7a2c259a-f63a-4951-a876-a2e8a7d1399b")
+        val transferId = UUID.fromString("df522f72-a23c-439b-bf8d-2cc0e7257551")
 
         return Stream.of(
             Arguments.of(
@@ -226,6 +375,46 @@ class AccountUpdateListenerInterACtTest {
                         ),
                         transactionType = "DEBIT",
                         transactionPurpose = "Grocery shopping"
+                    )
+                )
+            )
+        )
+    }
+
+    fun classificationEventForSpendingLimitGoal(): Stream<Arguments> {
+        // Use a fixed transferId for consistency
+        val transferId = UUID.fromString("8f7e6d5c-4b3a-2a1b-0c9d-8e7f6a5b4c3d")
+
+        return Stream.of(
+            Arguments.of(
+                AmqpMessage(
+                    mapOf(
+                        "exchange" to RabbitMQConfig.CLASSIFICATION_EXCHANGE_NAME,
+                        "routingKey" to RabbitMQConfig.CLASSIFICATION_ROUTING_KEY
+                    ),
+                    ClassificationEvent(
+                        transferId = transferId,
+                        classifications = listOf("Grocery")
+                    )
+                )
+            )
+        )
+    }
+
+    fun classificationEventForExceedingSpendingLimitGoal(): Stream<Arguments> {
+        // Use a fixed transferId for consistency
+        val transferId = UUID.fromString("9f8e7d6c-5b4a-3a2b-1c0d-9e8f7a6b5c4e")
+
+        return Stream.of(
+            Arguments.of(
+                AmqpMessage(
+                    mapOf(
+                        "exchange" to RabbitMQConfig.CLASSIFICATION_EXCHANGE_NAME,
+                        "routingKey" to RabbitMQConfig.CLASSIFICATION_ROUTING_KEY
+                    ),
+                    ClassificationEvent(
+                        transferId = transferId,
+                        classifications = listOf("Grocery")
                     )
                 )
             )
@@ -263,6 +452,27 @@ class AccountUpdateListenerInterACtTest {
             endDate = future,
             accountId = accountId,
             limit = BigDecimal("100.00"),
+            currencyCode = "EUR",
+            category = "Grocery",
+            currentSpending = BigDecimal.ZERO,
+            createdAt = now,
+            updatedAt = now
+        )
+
+        return goalRepository.save(goal)
+    }
+
+    private fun createTestSpendingLimitGoalWithLowLimit(accountId: String): SpendingLimitGoal {
+        val now = Instant.now(clock)
+        val future = now.plusSeconds(60 * 60 * 24 * 30) // 30 days in the future
+
+        val goal = SpendingLimitGoal(
+            name = "Test Spending Limit Goal with Low Limit",
+            description = "Test Description for a goal that will be exceeded",
+            startDate = now,
+            endDate = future,
+            accountId = accountId,
+            limit = BigDecimal("100.00"), // Low limit that will be exceeded
             currencyCode = "EUR",
             category = "Grocery",
             currentSpending = BigDecimal.ZERO,

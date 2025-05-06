@@ -82,7 +82,6 @@ object RabbitMQTestUtils {
     ): Message? {
         val messageRef = AtomicReference<Message>()
 
-
         Awaitility.await()
             .atMost(timeout, timeUnit)
             .pollInterval(Duration.ofMillis(100))

@@ -1,5 +1,6 @@
 package de.rwth.swc.piggybank.notificationservice
 
+import de.rwth.swc.piggybank.notificationservice.service.RabbitMQService
 import org.springframework.amqp.core.*
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
@@ -8,15 +9,10 @@ import org.springframework.context.annotation.Bean
 class AmqpTestConfig {
 
     @Bean
-    fun testNotificationExchange(): TopicExchange {
-        return TopicExchange("piggybank.notifications")
-    }
-
-    @Bean
-    fun testDeclarables(testNotificationExchange: TopicExchange): Declarables {
+    fun testDeclarables(notificationExchange: TopicExchange): Declarables {
         val testQueue = QueueBuilder.durable("test_queue").build()
         return Declarables(
             testQueue,
-            BindingBuilder.bind(testQueue).to(testNotificationExchange).with("#"))
+            BindingBuilder.bind(testQueue).to(notificationExchange).with(RabbitMQService.NOTIFICATION_ROUTING_KEY))
     }
 }

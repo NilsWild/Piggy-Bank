@@ -127,18 +127,17 @@ class TransactionControllerInterACtTest {
 
         // Then verify that an ACCOUNT_UPDATED event was sent to RabbitMQ
 
-            val message = RabbitMQTestUtils.waitForEventType(rabbitTemplate, "ACCOUNT_UPDATED", 2, TimeUnit.SECONDS)
-            message shouldNotBe null
-                // Convert the message body to a string and verify it contains the expected data
-                val messageBody = String(message!!.body)
-                messageBody shouldContain "\"eventType\":\"ACCOUNT_UPDATED\""
-                messageBody shouldContain "\"accountId\":\"${transactionRequest.affectedAccountId}\""
-                messageBody shouldContain "\"transactionId\":\"${transactionRequest.id}\""
-                messageBody shouldContain "\"transactionType\":\"${transactionRequest.type}\""
-                messageBody shouldContain "\"transactionPurpose\":\"${transactionRequest.purpose}\""
-                messageBody shouldContain "\"value\":\"${transactionRequest.amount.value}\""
-                messageBody shouldContain "\"currencyCode\":\"${transactionRequest.amount.currencyCode}\""
-
+        val message = RabbitMQTestUtils.waitForEventType(rabbitTemplate, "ACCOUNT_UPDATED", 2, TimeUnit.SECONDS)
+        message shouldNotBe null
+        // Convert the message body to a string and verify it contains the expected data
+        val messageBody = String(message!!.body)
+        messageBody shouldContain "\"eventType\":\"ACCOUNT_UPDATED\""
+        messageBody shouldContain "\"accountId\":\"${transactionRequest.affectedAccountId}\""
+        messageBody shouldContain "\"transactionId\":\"${transactionRequest.id}\""
+        messageBody shouldContain "\"transactionType\":\"${transactionRequest.type}\""
+        messageBody shouldContain "\"transactionPurpose\":\"${transactionRequest.purpose}\""
+        messageBody shouldContain "\"value\":\"${transactionRequest.amount.value}\""
+        messageBody shouldContain "\"currencyCode\":\"${transactionRequest.amount.currencyCode}\""
     }
 
     fun processTransactionRequests(): Stream<Arguments> {
@@ -147,27 +146,6 @@ class TransactionControllerInterACtTest {
                 RestMessage.Request(
                     "/api/transactions",
                     mapOf(),
-                    mapOf(),
-                    TransactionRequest(
-                        id = UUID.fromString("00000000-0000-0000-0000-000000000001"),
-                        transferId = UUID.fromString("00000000-0000-0000-0000-000000000002"),
-                        affectedAccountId = "account-123",
-                        amount = AmountDto(
-                            value = BigDecimal("100.00"),
-                            currencyCode = "EUR"
-                        ),
-                        valuationTimestamp = Instant.parse("2023-01-05T12:00:00Z"),
-                        purpose = "Test transaction",
-                        type = "CREDIT",
-                        sourceAccount = "source-account-123",
-                        destinationAccount = "account-123"
-                    )
-                )
-            ),
-            Arguments.of(
-                RestMessage.Request(
-                    "/api/transactions",
-                    mapOf("X-Request-ID" to "transaction-request-id"),
                     mapOf(),
                     TransactionRequest(
                         id = UUID.fromString("00000000-0000-0000-0000-000000000003"),

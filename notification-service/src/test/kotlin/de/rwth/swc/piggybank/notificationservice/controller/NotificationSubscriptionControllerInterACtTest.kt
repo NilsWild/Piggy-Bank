@@ -167,7 +167,7 @@ class NotificationSubscriptionControllerInterACtTest {
     private fun createTestSubscription(
         accountId: String,
         eventType: NotificationEventType,
-        id: UUID = UUID.fromString("00000000-0000-0000-0000-000000000002")
+        id: UUID = UUID.randomUUID()
     ): NotificationSubscription {
         val subscription = NotificationSubscription(
             id = id,
