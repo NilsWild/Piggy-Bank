@@ -35,9 +35,6 @@ class TransferService(
         }
 
         try {
-            // Send transfer event to RabbitMQ
-            rabbitMQService.sendTransferEvent(transfer)
-
             // Send transactions to AccountTwinService
             if (sourceAccountMonitored) {
                 val debitTransaction = transfer.toDebitTransaction()
@@ -48,6 +45,9 @@ class TransferService(
                 val creditTransaction = transfer.toCreditTransaction()
                 sendTransactionToAccountTwinService(TransactionRequest.fromDomain(creditTransaction))
             }
+
+            // Send transfer event to RabbitMQ
+            rabbitMQService.sendTransferEvent(transfer)
 
             return true
         } catch (e: Exception) {

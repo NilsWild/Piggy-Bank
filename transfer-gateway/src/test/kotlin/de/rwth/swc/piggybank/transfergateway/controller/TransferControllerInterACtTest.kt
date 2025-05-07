@@ -12,6 +12,7 @@ import de.rwth.swc.piggybank.transfergateway.config.MockServerConfig
 import de.rwth.swc.piggybank.transfergateway.config.RabbitMQTestConfig
 import de.rwth.swc.piggybank.transfergateway.domain.Account
 import de.rwth.swc.piggybank.transfergateway.domain.Amount
+import de.rwth.swc.piggybank.transfergateway.dto.TransactionResponse
 import de.rwth.swc.piggybank.transfergateway.dto.TransferRequest
 import de.rwth.swc.piggybank.transfergateway.service.AccountService
 import io.kotest.matchers.shouldBe
@@ -73,7 +74,7 @@ class TransferControllerInterACtTest {
     @MethodSource("handleTransferRequests")
     fun `should handle transfer request when source account is monitored`(
         requestStimulus: RestMessage.Request<TransferRequest>,
-        transactionResponse: RestMessage.Response<String>
+        transactionResponse: RestMessage.Response<TransactionResponse>
     ) {
         val transferRequest = requestStimulus.body!!
 
@@ -96,7 +97,7 @@ class TransferControllerInterACtTest {
     @MethodSource("handleTransferRequests")
     fun `should handle transfer request when target account is monitored`(
         requestStimulus: RestMessage.Request<TransferRequest>,
-        transactionResponse: RestMessage.Response<String>
+        transactionResponse: RestMessage.Response<TransactionResponse>
     ) {
         val transferRequest = requestStimulus.body!!
 
@@ -158,7 +159,7 @@ class TransferControllerInterACtTest {
                     "/api/transactions",
                     mapOf(),
                     mapOf(),
-                    "",
+                    null,
                     201
                 )
             ),
@@ -179,7 +180,7 @@ class TransferControllerInterACtTest {
                     "/api/transactions",
                     mapOf(),
                     mapOf(),
-                    "",
+                    null,
                     201
                 )
             )

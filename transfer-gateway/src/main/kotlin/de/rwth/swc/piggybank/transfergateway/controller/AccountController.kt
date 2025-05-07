@@ -37,7 +37,7 @@ class AccountController(private val accountService: AccountService) {
      *         or HTTP status 409 (Conflict) if the account was already in the list
      */
     @PostMapping
-    fun addMonitoredAccount(@Valid @RequestBody accountRequest: AccountRequest): ResponseEntity<Void> {
+    fun addMonitoredAccount(@Valid @RequestBody accountRequest: AccountRequest): ResponseEntity<Boolean> {
         logger.info("Adding monitored account: {}", accountRequest)
 
         val account = accountRequest.toDomain()
@@ -45,10 +45,10 @@ class AccountController(private val accountService: AccountService) {
 
         return if (added) {
             logger.info("Account added to monitored accounts")
-            ResponseEntity.status(HttpStatus.CREATED).build()
+            ResponseEntity.status(HttpStatus.CREATED).body(true)
         } else {
             logger.info("Account already in monitored accounts")
-            ResponseEntity.status(HttpStatus.CONFLICT).build()
+            ResponseEntity.status(HttpStatus.CONFLICT).body(false)
         }
     }
 

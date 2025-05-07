@@ -1,5 +1,6 @@
 package de.rwth.swc.piggybank.transfergateway.domain
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import java.io.Serializable
 import java.math.BigDecimal
 import java.util.Currency
@@ -25,6 +26,7 @@ data class Amount(
     /**
      * Gets the Currency object for this amount.
      */
+    @JsonIgnore
     fun getCurrency(): Currency = Currency.getInstance(currencyCode)
 
     /**
@@ -39,6 +41,7 @@ data class Amount(
      *
      * @return true if the amount is positive, false otherwise
      */
+    @JsonIgnore
     fun isPositive(): Boolean = value > BigDecimal.ZERO
 
     /**
@@ -46,6 +49,7 @@ data class Amount(
      *
      * @return true if the amount is negative, false otherwise
      */
+    @JsonIgnore
     fun isNegative(): Boolean = value < BigDecimal.ZERO
 
     override fun toString(): String = "$value $currencyCode"

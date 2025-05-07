@@ -59,9 +59,6 @@ class AccountService(
 
         transactionRepository.save(initialTransaction)
 
-        // Emit account creation event
-        rabbitMQService.sendAccountCreatedEvent(savedAccount)
-
         // Add the account to the monitored accounts in the TransferGateway
         try {
             val added = transferGatewayClient.addMonitoredAccount(savedAccount)
@@ -71,6 +68,9 @@ class AccountService(
             // We don't want to fail the account creation if the TransferGateway is unavailable,
             // so we just log the error and continue
         }
+
+        // Emit account creation event
+        rabbitMQService.sendAccountCreatedEvent(savedAccount)
 
         return savedAccount
     }
