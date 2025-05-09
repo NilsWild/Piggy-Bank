@@ -36,5 +36,5 @@ interface TransactionRepository : JpaRepository<Transaction, UUID> {
      * @param affectedAccountId The ID of the affected account
      * @return The transaction, or null if not found
      */
-    fun findByTransferIdAndAffectedAccountId(transferId: UUID, affectedAccountId: String): Transaction?
+    fun findByTransferIdAndAffectedAccountId(transferId: Long, affectedAccountId: String): Transaction?
 }

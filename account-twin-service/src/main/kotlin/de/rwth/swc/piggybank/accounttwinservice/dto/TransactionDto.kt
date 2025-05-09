@@ -1,7 +1,6 @@
 package de.rwth.swc.piggybank.accounttwinservice.dto
 
 import de.rwth.swc.piggybank.accounttwinservice.domain.Account
-import de.rwth.swc.piggybank.accounttwinservice.domain.Amount
 import de.rwth.swc.piggybank.accounttwinservice.domain.Transaction
 import de.rwth.swc.piggybank.accounttwinservice.domain.TransactionType
 import jakarta.validation.Valid
@@ -26,7 +25,7 @@ import java.util.UUID
  */
 data class TransactionRequest(
     val id: UUID? = null,
-    val transferId: UUID,
+    val transferId: Long,
     @field:NotBlank(message = "Affected account ID is required")
     val affectedAccountId: String,
     @field:Valid
@@ -101,7 +100,7 @@ data class TransactionRequest(
  */
 data class TransactionResponse(
     val id: UUID,
-    val transferId: UUID,
+    val transferId: Long,
     val affectedAccountId: String,
     val amount: AmountDto,
     val valuationTimestamp: Instant,

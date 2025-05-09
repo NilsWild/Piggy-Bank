@@ -47,7 +47,7 @@ class AccountService(
 
         // Create an initial transaction for the account
         val initialTransaction = Transaction(
-            transferId = UUID.randomUUID(),
+            transferId = 1L,
             affectedAccountId = savedAccount.id,
             account = savedAccount,
             amount = savedAccount.balance,

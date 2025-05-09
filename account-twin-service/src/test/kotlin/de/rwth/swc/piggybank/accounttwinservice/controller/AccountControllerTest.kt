@@ -9,7 +9,6 @@ import de.rwth.swc.piggybank.accounttwinservice.domain.TransactionType
 import de.rwth.swc.piggybank.accounttwinservice.dto.AccountRequest
 import de.rwth.swc.piggybank.accounttwinservice.dto.AmountDto
 import de.rwth.swc.piggybank.accounttwinservice.service.AccountService
-import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -346,7 +345,7 @@ class AccountControllerTest {
     ): Transaction {
         return Transaction(
             id = id,
-            transferId = UUID.randomUUID(),
+            transferId = 1L,
             affectedAccountId = accountId,
             account = account,
             amount = Amount(value, "EUR"),

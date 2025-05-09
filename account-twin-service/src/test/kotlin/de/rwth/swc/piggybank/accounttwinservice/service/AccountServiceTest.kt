@@ -318,7 +318,7 @@ class AccountServiceTest {
         account: Account,
         type: String = "CREDIT",
         value: BigDecimal = BigDecimal("100.00"),
-        transferId: UUID = UUID.randomUUID()
+        transferId: Long = 1L
     ): Transaction {
         return Transaction(
             id = id,

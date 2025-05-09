@@ -3,7 +3,6 @@ package de.rwth.swc.piggybank.accounttwinservice.dto
 import de.rwth.swc.piggybank.accounttwinservice.domain.Account
 import de.rwth.swc.piggybank.accounttwinservice.domain.Transaction
 import java.io.Serializable
-import java.util.UUID
 
 /**
  * Sealed class hierarchy for account events.

@@ -9,7 +9,6 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
-import java.time.Clock
 import java.time.Instant
 import java.util.UUID
 
@@ -37,7 +36,7 @@ data class Transaction(
     val id: UUID = UUID.randomUUID(),
 
     @Column(name = "transfer_id", nullable = false)
-    val transferId: UUID,
+    val transferId: Long,
 
     @Column(name = "account_id", nullable = false, insertable = false, updatable = false)
     val affectedAccountId: String,

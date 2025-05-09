@@ -1,6 +1,5 @@
 package de.rwth.swc.piggybank.accounttwinservice.service
 
-import de.rwth.swc.piggybank.accounttwinservice.domain.Account
 import de.rwth.swc.piggybank.accounttwinservice.domain.Transaction
 import de.rwth.swc.piggybank.accounttwinservice.dto.TransactionRequest
 import de.rwth.swc.piggybank.accounttwinservice.repository.AccountRepository
@@ -92,7 +91,7 @@ class TransactionService(
      * @param affectedAccountId The ID of the affected account
      * @return The transaction, or null if not found
      */
-    fun getTransactionByTransferIdAndAccountId(transferId: UUID, affectedAccountId: String): Transaction? {
+    fun getTransactionByTransferIdAndAccountId(transferId: Long, affectedAccountId: String): Transaction? {
         logger.info("Getting transaction with transfer ID: {} and affected account ID: {}", transferId, affectedAccountId)
         return transactionRepository.findByTransferIdAndAffectedAccountId(transferId, affectedAccountId)
     }
@@ -104,7 +103,7 @@ class TransactionService(
      * @param affectedAccountId The ID of the affected account
      * @return true if the transaction exists, false otherwise
      */
-    fun transactionExists(transferId: UUID, affectedAccountId: String): Boolean {
+    fun transactionExists(transferId: Long, affectedAccountId: String): Boolean {
         logger.info("Checking if transaction with transfer ID: {} and affected account ID: {} exists", transferId, affectedAccountId)
         return transactionRepository.findByTransferIdAndAffectedAccountId(transferId, affectedAccountId) != null
     }

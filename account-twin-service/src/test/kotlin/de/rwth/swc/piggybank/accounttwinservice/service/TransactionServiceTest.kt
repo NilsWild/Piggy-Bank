@@ -10,10 +10,7 @@ import de.rwth.swc.piggybank.accounttwinservice.repository.AccountRepository
 import de.rwth.swc.piggybank.accounttwinservice.repository.TransactionRepository
 import io.kotest.matchers.shouldBe
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
-import io.mockk.runs
-import io.mockk.slot
 import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -45,7 +42,7 @@ class TransactionServiceTest {
     fun `should process transaction successfully`() {
         // Given
         val transactionId = UUID.randomUUID()
-        val transferId = UUID.randomUUID()
+        val transferId = 1L
         val accountId = "BankAccount:DE123456789"
         val amount = AmountDto(BigDecimal("100.00"), "EUR")
         val valuationTimestamp = Instant.now()
@@ -95,7 +92,7 @@ class TransactionServiceTest {
     fun `should throw exception when account does not exist`() {
         // Given
         val transactionId = UUID.randomUUID()
-        val transferId = UUID.randomUUID()
+        val transferId = 1L
         val accountId = "BankAccount:DE123456789"
         val amount = AmountDto(BigDecimal("100.00"), "EUR")
         val valuationTimestamp = Instant.now()
@@ -188,7 +185,7 @@ class TransactionServiceTest {
     @Test
     fun `should get transaction by transfer ID and account ID`() {
         // Given
-        val transferId = UUID.randomUUID()
+        val transferId = 1L
         val accountId = "BankAccount:DE123456789"
         val transaction = createTransaction(UUID.randomUUID(), accountId, "CREDIT", BigDecimal("100.00"), transferId)
 
@@ -206,7 +203,7 @@ class TransactionServiceTest {
     @Test
     fun `should return null when transaction by transfer ID and account ID does not exist`() {
         // Given
-        val transferId = UUID.randomUUID()
+        val transferId = 1L
         val accountId = "BankAccount:DE123456789"
 
         every { transactionRepository.findByTransferIdAndAffectedAccountId(transferId, accountId) } returns null
@@ -223,7 +220,7 @@ class TransactionServiceTest {
     @Test
     fun `should check if transaction exists`() {
         // Given
-        val transferId = UUID.randomUUID()
+        val transferId = 1L
         val accountId = "BankAccount:DE123456789"
         val transaction = createTransaction(UUID.randomUUID(), accountId, "CREDIT", BigDecimal("100.00"), transferId)
 
@@ -241,7 +238,7 @@ class TransactionServiceTest {
     @Test
     fun `should return false when transaction does not exist`() {
         // Given
-        val transferId = UUID.randomUUID()
+        val transferId = 1L
         val accountId = "BankAccount:DE123456789"
 
         every { transactionRepository.findByTransferIdAndAffectedAccountId(transferId, accountId) } returns null
@@ -260,7 +257,7 @@ class TransactionServiceTest {
         accountId: String = "BankAccount:DE123456789",
         type: String = "CREDIT",
         value: BigDecimal = BigDecimal("100.00"),
-        transferId: UUID = UUID.randomUUID()
+        transferId: Long = 1L
     ): Transaction {
         val account = Account(
             id = accountId,

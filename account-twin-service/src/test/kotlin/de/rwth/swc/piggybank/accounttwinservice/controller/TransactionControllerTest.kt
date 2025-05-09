@@ -8,9 +8,7 @@ import de.rwth.swc.piggybank.accounttwinservice.domain.Transaction
 import de.rwth.swc.piggybank.accounttwinservice.domain.TransactionType
 import de.rwth.swc.piggybank.accounttwinservice.dto.AmountDto
 import de.rwth.swc.piggybank.accounttwinservice.dto.TransactionRequest
-import de.rwth.swc.piggybank.accounttwinservice.dto.TransactionResponse
 import de.rwth.swc.piggybank.accounttwinservice.service.TransactionService
-import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -19,17 +17,14 @@ import org.junit.jupiter.api.Test
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
-import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver
-import org.springframework.web.server.ResponseStatusException
 import java.math.BigDecimal
 import java.time.Instant
 import java.util.UUID
@@ -53,7 +48,7 @@ class TransactionControllerTest {
     fun `should process transaction and return created status`() {
         // Given
         val transactionId = UUID.randomUUID()
-        val transferId = UUID.randomUUID()
+        val transferId = 1L
         val accountId = "account123"
         val amount = AmountDto(BigDecimal("100.00"), "EUR")
         val valuationTimestamp = Instant.now()
@@ -116,7 +111,7 @@ class TransactionControllerTest {
     fun `should return existing transaction when it already exists`() {
         // Given
         val transactionId = UUID.randomUUID()
-        val transferId = UUID.randomUUID()
+        val transferId = 1L
         val accountId = "account123"
         val amount = AmountDto(BigDecimal("100.00"), "EUR")
         val valuationTimestamp = Instant.now()
@@ -125,7 +120,7 @@ class TransactionControllerTest {
 
         val transactionRequest = TransactionRequest(
             id = transactionId,
-            transferId = transferId,
+            transferId = 1L,
             affectedAccountId = accountId,
             amount = amount,
             valuationTimestamp = valuationTimestamp,
@@ -143,7 +138,7 @@ class TransactionControllerTest {
 
         val transaction = Transaction(
             id = transactionId,
-            transferId = transferId,
+            transferId = 1L,
             affectedAccountId = accountId,
             account = account,
             amount = amount.toDomain(),
@@ -180,7 +175,7 @@ class TransactionControllerTest {
     fun `should handle bad request when processing transaction`() {
         // Given
         val transactionId = UUID.randomUUID()
-        val transferId = UUID.randomUUID()
+        val transferId = 1L
         val accountId = "account123"
         val amount = AmountDto(BigDecimal("100.00"), "EUR")
         val valuationTimestamp = Instant.now()
@@ -216,7 +211,7 @@ class TransactionControllerTest {
     fun `should get transaction by ID`() {
         // Given
         val transactionId = UUID.randomUUID()
-        val transferId = UUID.randomUUID()
+        val transferId = 1L
         val accountId = "account123"
         val amount = Amount(BigDecimal("100.00"), "EUR")
         val valuationTimestamp = Instant.now()
@@ -328,7 +323,7 @@ class TransactionControllerTest {
 
         return Transaction(
             id = id,
-            transferId = UUID.randomUUID(),
+            transferId = 1L,
             affectedAccountId = accountId,
             account = account,
             amount = Amount(value, "EUR"),

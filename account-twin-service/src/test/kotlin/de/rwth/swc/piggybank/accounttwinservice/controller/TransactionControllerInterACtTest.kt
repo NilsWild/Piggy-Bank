@@ -149,7 +149,7 @@ class TransactionControllerInterACtTest {
                     mapOf(),
                     TransactionRequest(
                         id = UUID.fromString("00000000-0000-0000-0000-000000000003"),
-                        transferId = UUID.fromString("00000000-0000-0000-0000-000000000004"),
+                        transferId = 1L,
                         affectedAccountId = "account-456",
                         amount = AmountDto(
                             value = BigDecimal("250.50"),
