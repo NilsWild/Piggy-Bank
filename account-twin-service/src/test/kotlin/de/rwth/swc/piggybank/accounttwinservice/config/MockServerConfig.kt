@@ -68,7 +68,7 @@ open class MockServerConfig {
                     .`when`(
                         HttpRequest.request()
                             .withMethod("POST")
-                            .withPath("/api/monitored-accounts")
+                            .withPath("/api/accounts-to-watch")
                     )
                     .respond(
                         HttpResponse.response()

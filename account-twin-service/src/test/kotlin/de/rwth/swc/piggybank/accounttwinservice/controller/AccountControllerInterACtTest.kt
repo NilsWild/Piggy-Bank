@@ -138,7 +138,7 @@ class AccountControllerInterACtTest {
                 ),
                 // Mocked Transfer Gateway response
                 RestMessage.Response(
-                    "/api/accounts",
+                    "/api/accounts-to-watch",
                     mapOf("Content-Type" to MediaType.APPLICATION_JSON_VALUE),
                     mapOf(),
                     true,
@@ -162,7 +162,7 @@ class AccountControllerInterACtTest {
                 ),
                 // Mocked Transfer Gateway response
                 RestMessage.Response(
-                    "/api/accounts",
+                    "/api/accounts-to-watch",
                     mapOf("Content-Type" to MediaType.APPLICATION_JSON_VALUE),
                     mapOf(),
                     true,

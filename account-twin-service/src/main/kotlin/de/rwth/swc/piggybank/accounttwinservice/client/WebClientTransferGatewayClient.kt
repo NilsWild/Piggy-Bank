@@ -35,7 +35,7 @@ class WebClientTransferGatewayClient(
 
         try {
             val response = webClient.post()
-                .uri("/api/monitored-accounts")
+                .uri("/api/accounts-to-watch")
                 .bodyValue(accountRequest)
                 .retrieve()
                 .toBodilessEntity()
