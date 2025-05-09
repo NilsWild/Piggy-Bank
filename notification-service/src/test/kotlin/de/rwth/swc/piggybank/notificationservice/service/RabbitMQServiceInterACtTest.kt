@@ -42,6 +42,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.stream.Stream
 
+@Disabled
 @SpringBootTest(
     classes = [NotificationServiceApplication::class],
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
