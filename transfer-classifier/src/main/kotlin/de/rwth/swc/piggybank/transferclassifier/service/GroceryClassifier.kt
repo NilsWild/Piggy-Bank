@@ -1,6 +1,6 @@
 package de.rwth.swc.piggybank.transferclassifier.service
 
-import de.rwth.swc.piggybank.transferclassifier.domain.Transfer
+import de.rwth.swc.piggybank.transfergateway.domain.Transfer
 import org.springframework.stereotype.Component
 
 /**

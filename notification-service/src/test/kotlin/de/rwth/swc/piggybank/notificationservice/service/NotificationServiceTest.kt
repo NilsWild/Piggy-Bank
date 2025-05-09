@@ -1,5 +1,6 @@
 package de.rwth.swc.piggybank.notificationservice.service
 
+import de.rwth.swc.piggybank.goalservice.dto.GoalType
 import de.rwth.swc.piggybank.notificationservice.domain.Notification
 import de.rwth.swc.piggybank.notificationservice.domain.NotificationEventType
 import de.rwth.swc.piggybank.notificationservice.domain.NotificationSubscription
@@ -67,7 +68,7 @@ class NotificationServiceTest {
             accountId = accountId,
             goalId = goalId,
             goalName = "Test Goal",
-            goalType = "SPENDING_LIMIT",
+            goalType = GoalType.SPENDING_LIMIT,
             progress = BigDecimal("50.00"),
             target = BigDecimal("100.00"),
             currencyCode = "EUR"
@@ -108,7 +109,7 @@ class NotificationServiceTest {
             accountId = accountId,
             goalId = goalId,
             goalName = "Test Goal",
-            goalType = "SPENDING_LIMIT",
+            goalType = GoalType.SPENDING_LIMIT,
             progress = BigDecimal("50.00"),
             target = BigDecimal("100.00"),
             currencyCode = "EUR"

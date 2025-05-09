@@ -2,9 +2,11 @@ package de.rwth.swc.piggybank.goalservice.service
 
 import de.rwth.swc.piggybank.goalservice.domain.GoalStatus
 import de.rwth.swc.piggybank.goalservice.domain.SpendingLimitGoal
-import de.rwth.swc.piggybank.goalservice.dto.ClassificationEvent
 import de.rwth.swc.piggybank.goalservice.repository.GoalRepository
-import io.mockk.*
+import de.rwth.swc.piggybank.transferclassifier.domain.ClassificationResult
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -13,7 +15,7 @@ import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
-import java.util.UUID
+import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ClassificationListenerTest {
@@ -182,8 +184,8 @@ class ClassificationListenerTest {
         }
     }
 
-    private fun createClassificationEvent(): ClassificationEvent {
-        return ClassificationEvent(
+    private fun createClassificationEvent(): ClassificationResult {
+        return ClassificationResult(
             transferId = transferId,
             classifications = listOf("Grocery")
         )

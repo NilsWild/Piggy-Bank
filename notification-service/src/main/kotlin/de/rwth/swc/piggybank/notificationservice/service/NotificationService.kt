@@ -1,5 +1,6 @@
 package de.rwth.swc.piggybank.notificationservice.service
 
+import de.rwth.swc.piggybank.goalservice.dto.GoalType
 import de.rwth.swc.piggybank.notificationservice.domain.Notification
 import de.rwth.swc.piggybank.notificationservice.domain.NotificationEventType
 import de.rwth.swc.piggybank.notificationservice.domain.NotificationSubscription
@@ -47,9 +48,7 @@ class NotificationService(
         transactionType: String,
         amount: Double,
         currencyCode: String,
-        purpose: String,
-        sourceAccount: String?,
-        destinationAccount: String?
+        purpose: String
     ) {
         logger.info("Processing account updated event for account: {}", accountId)
 
@@ -66,13 +65,9 @@ class NotificationService(
 
         // Generate notification message based on transaction type
         val message = when (transactionType) {
-            "CREDIT" -> "You just received $amount $currencyCode" + 
-                        (if (sourceAccount != null) " from $sourceAccount" else "") +
-                        (if (purpose.isNotBlank()) " for: $purpose" else "")
-            "DEBIT" -> "You just sent $amount $currencyCode" + 
-                       (if (destinationAccount != null) " to $destinationAccount" else "") +
-                       (if (purpose.isNotBlank()) " for: $purpose" else "")
-            else -> "Your account balance has been updated by $amount $currencyCode"
+            "CREDIT" -> "You just received ${"%.2f".format(amount)} $currencyCode"
+            "DEBIT" -> "You just sent ${"%.2f".format(amount)} $currencyCode"
+            else -> "Your account balance has been updated by ${"%.2f".format(amount)} $currencyCode"
         }
 
         // Create and save a notification
@@ -250,7 +245,7 @@ class NotificationService(
         accountId: String,
         goalId: UUID,
         goalName: String,
-        goalType: String,
+        goalType: GoalType,
         progress: BigDecimal,
         target: BigDecimal,
         currencyCode: String

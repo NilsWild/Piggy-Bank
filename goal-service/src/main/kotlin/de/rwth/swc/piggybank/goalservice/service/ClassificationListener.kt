@@ -3,8 +3,8 @@ package de.rwth.swc.piggybank.goalservice.service
 import de.rwth.swc.piggybank.goalservice.config.RabbitMQConfig
 import de.rwth.swc.piggybank.goalservice.domain.GoalStatus
 import de.rwth.swc.piggybank.goalservice.domain.SpendingLimitGoal
-import de.rwth.swc.piggybank.goalservice.dto.ClassificationEvent
 import de.rwth.swc.piggybank.goalservice.repository.GoalRepository
+import de.rwth.swc.piggybank.transferclassifier.domain.ClassificationResult
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.stereotype.Service
@@ -33,7 +33,7 @@ class ClassificationListener(
      */
     @RabbitListener(queues = [RabbitMQConfig.CLASSIFICATION_QUEUE_NAME])
     @Transactional
-    fun handleClassificationEvent(event: ClassificationEvent) {
+    fun handleClassificationEvent(event: ClassificationResult) {
         logger.info("Received classification event: {}", event)
 
         try {

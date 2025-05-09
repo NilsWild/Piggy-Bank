@@ -1,8 +1,8 @@
 package de.rwth.swc.piggybank.transferclassifier.service
 
-import de.rwth.swc.piggybank.transferclassifier.domain.Account
-import de.rwth.swc.piggybank.transferclassifier.domain.Amount
-import de.rwth.swc.piggybank.transferclassifier.domain.Transfer
+import de.rwth.swc.piggybank.transfergateway.domain.Account
+import de.rwth.swc.piggybank.transfergateway.domain.Amount
+import de.rwth.swc.piggybank.transfergateway.domain.Transfer
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance

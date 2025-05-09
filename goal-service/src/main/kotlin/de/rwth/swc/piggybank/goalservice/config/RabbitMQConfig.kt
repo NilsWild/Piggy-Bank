@@ -1,5 +1,6 @@
 package de.rwth.swc.piggybank.goalservice.config
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.Queue
@@ -101,8 +102,8 @@ class RabbitMQConfig {
      * Creates a Jackson2JsonMessageConverter for converting objects to JSON.
      */
     @Bean
-    fun messageConverter(): Jackson2JsonMessageConverter {
-        return Jackson2JsonMessageConverter()
+    fun messageConverter(objectMapper: ObjectMapper): Jackson2JsonMessageConverter {
+        return Jackson2JsonMessageConverter(objectMapper)
     }
 
     /**

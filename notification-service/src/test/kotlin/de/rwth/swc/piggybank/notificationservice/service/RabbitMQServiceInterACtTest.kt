@@ -1,10 +1,12 @@
 package de.rwth.swc.piggybank.notificationservice.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import de.interact.amqp.TestAmqpClient
 import de.interact.amqp.observer.SpringAMQPInterACtObserverConfiguration
 import de.interact.domain.amqp.AmqpMessage
 import de.interact.junit.jupiter.annotation.InterACtTest
+import de.rwth.swc.piggybank.accounttwinservice.dto.AccountUpdatedEvent
+import de.rwth.swc.piggybank.accounttwinservice.dto.TransactionAmountDto
+import de.rwth.swc.piggybank.goalservice.dto.*
 import de.rwth.swc.piggybank.notificationservice.AmqpTestConfig
 import de.rwth.swc.piggybank.notificationservice.NotificationServiceApplication
 import de.rwth.swc.piggybank.notificationservice.config.InterACtConfig
@@ -12,18 +14,15 @@ import de.rwth.swc.piggybank.notificationservice.config.RabbitMQTestConfig
 import de.rwth.swc.piggybank.notificationservice.config.TestClockConfig
 import de.rwth.swc.piggybank.notificationservice.domain.NotificationEventType
 import de.rwth.swc.piggybank.notificationservice.domain.NotificationSubscription
-import de.rwth.swc.piggybank.notificationservice.dto.GoalUpdatedEvent
-import de.rwth.swc.piggybank.notificationservice.dto.GoalAchievedEvent
-import de.rwth.swc.piggybank.notificationservice.dto.GoalFailedEvent
 import de.rwth.swc.piggybank.notificationservice.repository.NotificationRepository
 import de.rwth.swc.piggybank.notificationservice.repository.NotificationSubscriptionRepository
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
+import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.amqp.core.Message
@@ -31,22 +30,17 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
+import org.springframework.data.domain.PageRequest
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
+import java.math.BigDecimal
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
 import java.util.stream.Stream
-import java.math.BigDecimal
-import org.awaitility.Awaitility.await
-import org.awaitility.kotlin.until
-import org.awaitility.kotlin.untilNotNull
-import org.junit.jupiter.api.Disabled
-import org.springframework.data.domain.PageRequest
 
 @SpringBootTest(
     classes = [NotificationServiceApplication::class],
@@ -100,7 +94,7 @@ class RabbitMQServiceInterACtTest {
         subscriptionRepository.deleteAll()
 
         // Clear the RabbitMQ queue before each test
-        rabbitTemplate.execute { channel ->
+        rabbitTemplate.execute<Nothing> { channel ->
             channel.queuePurge("test_queue")
             null
         }
@@ -108,9 +102,9 @@ class RabbitMQServiceInterACtTest {
 
     @InterACtTest
     @MethodSource("accountUpdatedEvents")
-    fun `should process account update event and send notification`(eventStimulus: AmqpMessage<Map<String, Any>>) {
+    fun `should process account update event and send notification`(eventStimulus: AmqpMessage<AccountUpdatedEvent>) {
         // Given
-        val accountId = eventStimulus.body["accountId"] as String
+        val accountId = eventStimulus.body.accountId
 
         // Create a subscription for the account
         createTestSubscription(accountId, NotificationEventType.BALANCE_UPDATE)
@@ -143,9 +137,9 @@ class RabbitMQServiceInterACtTest {
     @Disabled
     @InterACtTest
     @MethodSource("accountUpdatedEventsNoSubscription")
-    fun `should not send notification when no subscription exists`(eventStimulus: AmqpMessage<Map<String, Any>>) {
+    fun `should not send notification when no subscription exists`(eventStimulus: AmqpMessage<AccountUpdatedEvent>) {
         // Given
-        val accountId = eventStimulus.body["accountId"] as String
+        val accountId = eventStimulus.body.accountId
 
         // When - Send the account update event
         testAmqpClient.send(
@@ -175,23 +169,21 @@ class RabbitMQServiceInterACtTest {
                         "exchange" to ACCOUNT_EXCHANGE_NAME,
                         "routingKey" to ACCOUNT_UPDATED_ROUTING_KEY
                     ),
-                    mapOf(
-                        "eventType" to "ACCOUNT_UPDATED",
-                        "accountId" to "test-account-456",
-                        "accountType" to "CHECKING",
-                        "accountIdentifier" to "DE987654321",
-                        "value" to "900.00",
-                        "currencyCode" to "EUR",
-                        "transactionId" to TRANSACTION_ID_1.toString(),
-                        "transferId" to TRANSFER_ID_1.toString(),
-                        "transactionAmount" to mapOf(
-                            "value" to "50.00",
-                            "currencyCode" to "EUR"
+                    AccountUpdatedEvent(
+                        eventType = "ACCOUNT_UPDATED",
+                        accountId = "test-account-456",
+                        accountType = "CHECKING",
+                        accountIdentifier = "DE987654321",
+                        value = "900.00",
+                        currencyCode = "EUR",
+                        transactionId = TRANSACTION_ID_1.toString(),
+                        transferId = TRANSFER_ID_1.toString(),
+                        transactionAmount = TransactionAmountDto(
+                            value = "50.00",
+                            currencyCode = "EUR"
                         ),
-                        "transactionType" to "DEBIT",
-                        "transactionPurpose" to "Grocery shopping",
-                        "sourceAccount" to null,
-                        "destinationAccount" to "grocery-store"
+                        transactionType = "DEBIT",
+                        transactionPurpose = "Grocery shopping",
                     )
                 )
             )
@@ -206,23 +198,21 @@ class RabbitMQServiceInterACtTest {
                         "exchange" to ACCOUNT_EXCHANGE_NAME,
                         "routingKey" to ACCOUNT_UPDATED_ROUTING_KEY
                     ),
-                    mapOf(
-                        "eventType" to "ACCOUNT_UPDATED",
-                        "accountId" to "test-account-no-subscription",
-                        "accountType" to "CHECKING",
-                        "accountIdentifier" to "DE123456789",
-                        "value" to "1100.00",
-                        "currencyCode" to "EUR",
-                        "transactionId" to TRANSACTION_ID_2.toString(),
-                        "transferId" to TRANSFER_ID_2.toString(),
-                        "transactionAmount" to mapOf(
-                            "value" to "100.00",
-                            "currencyCode" to "EUR"
+                    AccountUpdatedEvent(
+                        eventType = "ACCOUNT_UPDATED",
+                        accountId = "test-account-no-subscription",
+                        accountType = "CHECKING",
+                        accountIdentifier = "DE123456789",
+                        value = "1100.00",
+                        currencyCode = "EUR",
+                        transactionId = TRANSACTION_ID_2.toString(),
+                        transferId = TRANSFER_ID_2.toString(),
+                        transactionAmount = TransactionAmountDto(
+                            value = "100.00",
+                            currencyCode = "EUR"
                         ),
-                        "transactionType" to "CREDIT",
-                        "transactionPurpose" to "Salary payment",
-                        "sourceAccount" to "employer-account",
-                        "destinationAccount" to null
+                        transactionType = "CREDIT",
+                        transactionPurpose = "Salary payment"
                     )
                 )
             )
@@ -242,8 +232,8 @@ class RabbitMQServiceInterACtTest {
                         eventType = "GOAL_UPDATED",
                         goalId = GOAL_ID_1,
                         goalName = "Vacation Savings",
-                        goalType = "SAVINGS",
-                        goalStatus = "ACTIVE",
+                        goalType = GoalType.SAVINGS,
+                        goalStatus = GoalStatus.ACTIVE,
                         accountId = "test-account-789",
                         timestamp = now,
                         progress = BigDecimal("500.00"),
@@ -268,8 +258,8 @@ class RabbitMQServiceInterACtTest {
                         eventType = "GOAL_UPDATED",
                         goalId = GOAL_ID_2,
                         goalName = "Budget Goal",
-                        goalType = "SPENDING_LIMIT",
-                        goalStatus = "ACTIVE",
+                        goalType = GoalType.SPENDING_LIMIT,
+                        goalStatus = GoalStatus.ACTIVE,
                         accountId = "test-account-no-subscription-goal",
                         timestamp = now,
                         progress = BigDecimal("300.00"),
@@ -294,8 +284,8 @@ class RabbitMQServiceInterACtTest {
                         eventType = "GOAL_ACHIEVED",
                         goalId = GOAL_ID_1,
                         goalName = "Vacation Savings",
-                        goalType = "SAVINGS",
-                        goalStatus = "ACHIEVED",
+                        goalType = GoalType.SAVINGS,
+                        goalStatus = GoalStatus.ACHIEVED,
                         accountId = "test-account-456",
                         timestamp = now
                     )
@@ -317,8 +307,8 @@ class RabbitMQServiceInterACtTest {
                         eventType = "GOAL_FAILED",
                         goalId = GOAL_ID_2,
                         goalName = "Budget Goal",
-                        goalType = "SPENDING_LIMIT",
-                        goalStatus = "FAILED",
+                        goalType = GoalType.SPENDING_LIMIT,
+                        goalStatus = GoalStatus.FAILED,
                         accountId = "test-account-123",
                         timestamp = now
                     )

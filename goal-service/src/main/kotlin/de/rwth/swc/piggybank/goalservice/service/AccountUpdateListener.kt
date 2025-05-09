@@ -1,9 +1,9 @@
 package de.rwth.swc.piggybank.goalservice.service
 
+import de.rwth.swc.piggybank.accounttwinservice.dto.AccountUpdatedEvent
 import de.rwth.swc.piggybank.goalservice.config.RabbitMQConfig
 import de.rwth.swc.piggybank.goalservice.domain.GoalStatus
 import de.rwth.swc.piggybank.goalservice.domain.SpendingLimitGoal
-import de.rwth.swc.piggybank.goalservice.dto.AccountUpdatedEvent
 import de.rwth.swc.piggybank.goalservice.repository.GoalRepository
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.annotation.RabbitListener
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.time.Clock
-import java.util.UUID
+import java.util.*
 
 /**
  * Service for listening to account update events from RabbitMQ.

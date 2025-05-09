@@ -1,5 +1,9 @@
 package de.rwth.swc.piggybank.transfergateway.config
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import de.interact.domain.rest.RestMessage
+import de.rwth.swc.piggybank.transfergateway.dto.TransactionResponse
 import org.mockserver.client.MockServerClient
 import org.mockserver.model.HttpRequest
 import org.mockserver.model.HttpResponse
@@ -57,23 +61,30 @@ open class MockServerConfig {
 
         /**
          * Sets up an expectation for the MockServer to respond to a POST request to /api/transactions
-         * with a 201 CREATED response.
+         * with a response based on the provided RestMessage.Response.
          *
-         * @param statusCode The HTTP status code to return (201 for created, 500 for error)
+         * @param response The RestMessage.Response containing the response body and status code to return
          */
-        fun setupSendTransactionExpectation(statusCode: Int = 201) {
+        fun setupMock(response: RestMessage.Response<TransactionResponse>) {
             try {
+                val httpResponse = HttpResponse.response()
+                    .withStatusCode(response.statusCode)
+                    .withContentType(MediaType.APPLICATION_JSON)
+
+                // Convert the response body to JSON and add it to the HTTP response
+                if (response.body != null) {
+                    val objectMapper = ObjectMapper().registerModule(JavaTimeModule())
+                    val jsonBody = objectMapper.writeValueAsString(response.body)
+                    httpResponse.withBody(jsonBody)
+                }
+
                 createMockServerClient()
                     .`when`(
                         HttpRequest.request()
                             .withMethod("POST")
                             .withPath("/api/transactions")
                     )
-                    .respond(
-                        HttpResponse.response()
-                            .withStatusCode(statusCode)
-                            .withContentType(MediaType.APPLICATION_JSON)
-                    )
+                    .respond(httpResponse)
             } catch (e: Exception) {
                 e.printStackTrace()
                 throw e

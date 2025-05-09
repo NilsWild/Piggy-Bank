@@ -1,9 +1,12 @@
 package de.rwth.swc.piggybank.notificationservice.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import de.rwth.swc.piggybank.accounttwinservice.dto.AccountUpdatedEvent
+import de.rwth.swc.piggybank.goalservice.dto.GoalAchievedEvent
+import de.rwth.swc.piggybank.goalservice.dto.GoalFailedEvent
+import de.rwth.swc.piggybank.goalservice.dto.GoalUpdatedEvent
 import de.rwth.swc.piggybank.notificationservice.domain.Notification
-import de.rwth.swc.piggybank.notificationservice.dto.GoalAchievedEvent
-import de.rwth.swc.piggybank.notificationservice.dto.GoalFailedEvent
-import de.rwth.swc.piggybank.notificationservice.dto.GoalUpdatedEvent
+import de.rwth.swc.piggybank.notificationservice.dto.NotificationEventDto
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -15,7 +18,8 @@ import org.springframework.stereotype.Service
 @Service
 class RabbitMQService(
     private val rabbitTemplate: RabbitTemplate,
-    private val notificationService: NotificationService
+    private val notificationService: NotificationService,
+    private val objectMapper: ObjectMapper
 ) {
     private val logger = LoggerFactory.getLogger(RabbitMQService::class.java)
 
@@ -31,45 +35,26 @@ class RabbitMQService(
     /**
      * Listens for account updated events and processes them.
      *
-     * @param event The account updated event
+     * @param eventMap The account updated event as a Map
      */
     @RabbitListener(queues = ["piggybank.accounts.updated.notifications.queue"])
-    fun handleAccountUpdatedEvent(event: Map<String, Any>) {
+    fun handleAccountUpdatedEvent(event: AccountUpdatedEvent) {
         logger.info("Received account updated event: {}", event)
-        try {
-            // Extract event data
-            val eventType = event["eventType"] as String
-            if (eventType != "ACCOUNT_UPDATED") {
-                logger.warn("Ignoring non-ACCOUNT_UPDATED event: {}", eventType)
-                return
-            }
 
-            val accountId = event["accountId"] as String
-            val transactionType = event["transactionType"] as String
-            val transactionAmount = event["transactionAmount"] as Map<String, Any>
-            val value = when (val rawValue = transactionAmount["value"]) {
-                is Number -> rawValue
-                is String -> rawValue.toDouble()
-                else -> throw IllegalArgumentException("Transaction amount value must be a Number or String")
-            }
-            val currencyCode = transactionAmount["currencyCode"] as String
-            val purpose = event["transactionPurpose"] as String
-            val sourceAccount = event["sourceAccount"] as? String
-            val destinationAccount = event["destinationAccount"] as? String
+
+
+
+            // Extract values from the event
+            val value = event.transactionAmount.value.toDouble()
 
             // Process the event to generate notifications
             notificationService.processAccountUpdatedEvent(
-                accountId = accountId,
-                transactionType = transactionType,
+                accountId = event.accountId,
+                transactionType = event.transactionType,
                 amount = value.toDouble(),
-                currencyCode = currencyCode,
-                purpose = purpose,
-                sourceAccount = sourceAccount,
-                destinationAccount = destinationAccount
+                currencyCode = event.transactionAmount.currencyCode,
+                purpose = event.transactionPurpose
             )
-        } catch (e: Exception) {
-            logger.error("Failed to process account updated event", e)
-        }
     }
 
     /**
@@ -145,14 +130,7 @@ class RabbitMQService(
         logger.info("Sending notification to RabbitMQ: {}", notification)
         try {
             // Create event map for RabbitMQ
-            val event = mapOf(
-                "id" to notification.id.toString(),
-                "accountId" to notification.accountId,
-                "eventType" to notification.eventType.name,
-                "message" to notification.message,
-                "read" to notification.read,
-                "createdAt" to notification.createdAt.toString()
-            )
+            val event = NotificationEventDto.fromDomain(notification)
 
             // Send to RabbitMQ
             rabbitTemplate.convertAndSend(NOTIFICATION_EXCHANGE_NAME, NOTIFICATION_ROUTING_KEY, event)

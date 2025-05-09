@@ -9,11 +9,11 @@ import de.rwth.swc.piggybank.transferclassifier.AmqpTestConfig
 import de.rwth.swc.piggybank.transferclassifier.InterACtConfig
 import de.rwth.swc.piggybank.transferclassifier.config.RabbitMQConfig
 import de.rwth.swc.piggybank.transferclassifier.config.RabbitMQTestConfig
-import de.rwth.swc.piggybank.transferclassifier.domain.Account
-import de.rwth.swc.piggybank.transferclassifier.domain.Amount
 import de.rwth.swc.piggybank.transferclassifier.domain.ClassificationResult
-import de.rwth.swc.piggybank.transferclassifier.domain.Transfer
 import de.rwth.swc.piggybank.transferclassifier.util.RabbitMQTestUtils
+import de.rwth.swc.piggybank.transfergateway.domain.Account
+import de.rwth.swc.piggybank.transfergateway.domain.Amount
+import de.rwth.swc.piggybank.transfergateway.domain.Transfer
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe

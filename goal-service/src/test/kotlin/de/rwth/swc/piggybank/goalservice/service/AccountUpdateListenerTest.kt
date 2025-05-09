@@ -1,12 +1,14 @@
 package de.rwth.swc.piggybank.goalservice.service
 
+import de.rwth.swc.piggybank.accounttwinservice.dto.AccountUpdatedEvent
+import de.rwth.swc.piggybank.accounttwinservice.dto.TransactionAmountDto
 import de.rwth.swc.piggybank.goalservice.domain.GoalStatus
 import de.rwth.swc.piggybank.goalservice.domain.SavingsGoal
 import de.rwth.swc.piggybank.goalservice.domain.SpendingLimitGoal
-import de.rwth.swc.piggybank.goalservice.dto.AccountUpdatedEvent
-import de.rwth.swc.piggybank.goalservice.dto.TransactionAmountDto
 import de.rwth.swc.piggybank.goalservice.repository.GoalRepository
-import io.mockk.*
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -15,7 +17,7 @@ import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
-import java.util.UUID
+import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AccountUpdateListenerTest {

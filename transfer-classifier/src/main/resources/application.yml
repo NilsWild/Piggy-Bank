@@ -9,3 +9,6 @@ spring:
     port: 5672
     username: guest
     password: guest
+  jackson:
+    serialization:
+      write-dates-as-timestamps: true

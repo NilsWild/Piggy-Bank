@@ -3,48 +3,14 @@ package de.rwth.swc.piggybank.goalservice.dto
 import de.rwth.swc.piggybank.goalservice.domain.Goal
 import de.rwth.swc.piggybank.goalservice.domain.GoalStatus
 import de.rwth.swc.piggybank.goalservice.domain.GoalType
-import java.io.Serializable
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.UUID
 
 /**
- * DTO for account updated events received from the account-twin-service.
- */
-data class AccountUpdatedEvent(
-    val eventType: String,
-    val accountId: String,
-    val accountType: String,
-    val accountIdentifier: String,
-    val value: String,
-    val currencyCode: String,
-    val transactionId: String,
-    val transferId: String,
-    val transactionAmount: TransactionAmountDto,
-    val transactionType: String,
-    val transactionPurpose: String
-) : Serializable
-
-/**
- * DTO for transaction amount in account updated events.
- */
-data class TransactionAmountDto(
-    val value: String,
-    val currencyCode: String
-) : Serializable
-
-/**
- * DTO for classification events received from the transfer-classifier.
- */
-data class ClassificationEvent(
-    val transferId: UUID,
-    val classifications: List<String>
-) : Serializable
-
-/**
  * Base class for goal events sent by the goal-service.
  */
-sealed class GoalEvent : Serializable {
+sealed class GoalEvent {
     abstract val eventType: String
     abstract val goalId: UUID
     abstract val goalName: String

@@ -12,4 +12,9 @@ import java.util.UUID
 data class ClassificationResult(
     val transferId: UUID,
     val classifications: List<String>
-)
+) {
+    constructor() : this(
+        transferId = UUID.randomUUID(),
+        classifications = emptyList()
+    )
+}

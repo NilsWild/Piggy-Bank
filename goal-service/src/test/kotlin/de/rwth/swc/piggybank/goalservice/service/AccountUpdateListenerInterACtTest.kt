@@ -1,31 +1,25 @@
 package de.rwth.swc.piggybank.goalservice.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import de.interact.amqp.TestAmqpClient
 import de.interact.amqp.observer.SpringAMQPInterACtObserverConfiguration
 import de.interact.domain.amqp.AmqpMessage
-import de.interact.domain.testobservation.config.Configuration
 import de.interact.junit.jupiter.annotation.InterACtTest
+import de.rwth.swc.piggybank.accounttwinservice.dto.AccountUpdatedEvent
+import de.rwth.swc.piggybank.accounttwinservice.dto.TransactionAmountDto
 import de.rwth.swc.piggybank.goalservice.GoalServiceApplication
-import de.rwth.swc.piggybank.goalservice.config.AmqpTestConfig
-import de.rwth.swc.piggybank.goalservice.config.InterACtConfig
-import de.rwth.swc.piggybank.goalservice.config.RabbitMQConfig
-import de.rwth.swc.piggybank.goalservice.config.RabbitMQTestConfig
-import de.rwth.swc.piggybank.goalservice.config.TestClockConfig
+import de.rwth.swc.piggybank.goalservice.config.*
 import de.rwth.swc.piggybank.goalservice.domain.GoalStatus
 import de.rwth.swc.piggybank.goalservice.domain.SavingsGoal
 import de.rwth.swc.piggybank.goalservice.domain.SpendingLimitGoal
-import de.rwth.swc.piggybank.goalservice.dto.AccountUpdatedEvent
-import de.rwth.swc.piggybank.goalservice.dto.ClassificationEvent
-import de.rwth.swc.piggybank.goalservice.dto.TransactionAmountDto
 import de.rwth.swc.piggybank.goalservice.repository.GoalRepository
 import de.rwth.swc.piggybank.goalservice.util.RabbitMQTestUtils
+import de.rwth.swc.piggybank.transferclassifier.domain.ClassificationResult
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
+import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -39,12 +33,9 @@ import org.springframework.test.context.ContextConfiguration
 import java.math.BigDecimal
 import java.time.Clock
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.stream.Stream
-import org.awaitility.Awaitility.await
-import org.awaitility.kotlin.until
-import org.awaitility.kotlin.untilNotNull
 
 @SpringBootTest(
     classes = [GoalServiceApplication::class],
@@ -196,7 +187,7 @@ class AccountUpdateListenerInterACtTest {
 
     @InterACtTest
     @MethodSource("classificationEventForSpendingLimitGoal")
-    fun `should process classification event when transfer is already in cache`(eventStimulus: AmqpMessage<ClassificationEvent>){
+    fun `should process classification event when transfer is already in cache`(eventStimulus: AmqpMessage<ClassificationResult>){
         // Create a spending limit goal
         val accountId = "test-account-123" // Same as in accountUpdatedEventForSpendingLimitGoal
         val goal = createTestSpendingLimitGoal(accountId)
@@ -235,7 +226,7 @@ class AccountUpdateListenerInterACtTest {
 
     @InterACtTest
     @MethodSource("classificationEventForExceedingSpendingLimitGoal")
-    fun `should fail spending limit goal when spending exceeds limit`(eventStimulus: AmqpMessage<ClassificationEvent>){
+    fun `should fail spending limit goal when spending exceeds limit`(eventStimulus: AmqpMessage<ClassificationResult>){
         // Create a spending limit goal with a low limit
         val accountId = "test-account-123"
         val goal = createTestSpendingLimitGoalWithLowLimit(accountId)
@@ -392,7 +383,7 @@ class AccountUpdateListenerInterACtTest {
                         "exchange" to RabbitMQConfig.CLASSIFICATION_EXCHANGE_NAME,
                         "routingKey" to RabbitMQConfig.CLASSIFICATION_ROUTING_KEY
                     ),
-                    ClassificationEvent(
+                    ClassificationResult(
                         transferId = transferId,
                         classifications = listOf("Grocery")
                     )
@@ -412,7 +403,7 @@ class AccountUpdateListenerInterACtTest {
                         "exchange" to RabbitMQConfig.CLASSIFICATION_EXCHANGE_NAME,
                         "routingKey" to RabbitMQConfig.CLASSIFICATION_ROUTING_KEY
                     ),
-                    ClassificationEvent(
+                    ClassificationResult(
                         transferId = transferId,
                         classifications = listOf("Grocery")
                     )

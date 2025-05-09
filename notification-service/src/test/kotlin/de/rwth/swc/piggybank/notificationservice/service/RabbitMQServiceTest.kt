@@ -1,11 +1,14 @@
 package de.rwth.swc.piggybank.notificationservice.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import de.rwth.swc.piggybank.accounttwinservice.dto.AccountUpdatedEvent
+import de.rwth.swc.piggybank.accounttwinservice.dto.TransactionAmountDto
+import de.rwth.swc.piggybank.goalservice.dto.*
 import de.rwth.swc.piggybank.notificationservice.domain.Notification
 import de.rwth.swc.piggybank.notificationservice.domain.NotificationEventType
-import de.rwth.swc.piggybank.notificationservice.dto.GoalAchievedEvent
-import de.rwth.swc.piggybank.notificationservice.dto.GoalFailedEvent
-import de.rwth.swc.piggybank.notificationservice.dto.GoalUpdatedEvent
-import io.mockk.*
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -13,7 +16,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RabbitMQServiceTest {
@@ -31,9 +34,11 @@ class RabbitMQServiceTest {
     fun setup() {
         rabbitTemplate = mockk(relaxed = true)
         notificationService = mockk(relaxed = true)
+        val objectMapper = mockk<ObjectMapper>(relaxed = true)
         rabbitMQService = RabbitMQService(
             rabbitTemplate = rabbitTemplate,
-            notificationService = notificationService
+            notificationService = notificationService,
+            objectMapper = objectMapper
         )
     }
 
@@ -44,8 +49,8 @@ class RabbitMQServiceTest {
             eventType = "GOAL_UPDATED",
             goalId = goalId,
             goalName = "Test Goal",
-            goalType = "SPENDING_LIMIT",
-            goalStatus = "ACTIVE",
+            goalType = GoalType.SPENDING_LIMIT,
+            goalStatus = GoalStatus.ACTIVE,
             accountId = accountId,
             timestamp = now,
             progress = BigDecimal("50.00"),
@@ -62,7 +67,7 @@ class RabbitMQServiceTest {
                 accountId = accountId,
                 goalId = goalId,
                 goalName = "Test Goal",
-                goalType = "SPENDING_LIMIT",
+                goalType = GoalType.SPENDING_LIMIT,
                 progress = BigDecimal("50.00"),
                 target = BigDecimal("100.00"),
                 currencyCode = "EUR"
@@ -77,8 +82,8 @@ class RabbitMQServiceTest {
             eventType = "GOAL_ACHIEVED",
             goalId = goalId,
             goalName = "Test Goal",
-            goalType = "SPENDING_LIMIT",
-            goalStatus = "ACHIEVED",
+            goalType = GoalType.SPENDING_LIMIT,
+            goalStatus = GoalStatus.ACHIEVED,
             accountId = accountId,
             timestamp = now
         )
@@ -103,8 +108,8 @@ class RabbitMQServiceTest {
             eventType = "GOAL_FAILED",
             goalId = goalId,
             goalName = "Test Goal",
-            goalType = "SPENDING_LIMIT",
-            goalStatus = "FAILED",
+            goalType = GoalType.SPENDING_LIMIT,
+            goalStatus = GoalStatus.FAILED,
             accountId = accountId,
             timestamp = now
         )
@@ -129,8 +134,8 @@ class RabbitMQServiceTest {
             eventType = "GOAL_UPDATED",
             goalId = goalId,
             goalName = "Test Goal",
-            goalType = "SPENDING_LIMIT",
-            goalStatus = "ACTIVE",
+            goalType = GoalType.SPENDING_LIMIT,
+            goalStatus = GoalStatus.ACTIVE,
             accountId = accountId,
             timestamp = now,
             progress = BigDecimal("50.00"),
@@ -153,7 +158,7 @@ class RabbitMQServiceTest {
                 accountId = accountId,
                 goalId = goalId,
                 goalName = "Test Goal",
-                goalType = "SPENDING_LIMIT",
+                goalType = GoalType.SPENDING_LIMIT,
                 progress = BigDecimal("50.00"),
                 target = BigDecimal("100.00"),
                 currencyCode = "EUR"
@@ -215,21 +220,28 @@ class RabbitMQServiceTest {
     @Test
     fun `should handle account updated event with Number value`() {
         // Given
-        val event = mapOf(
-            "eventType" to "ACCOUNT_UPDATED",
-            "accountId" to accountId,
-            "transactionType" to "DEPOSIT",
-            "transactionAmount" to mapOf(
-                "value" to 100.0,
-                "currencyCode" to "EUR"
+        val transactionId = UUID.randomUUID().toString()
+        val transferId = UUID.randomUUID().toString()
+
+        val eventDto = AccountUpdatedEvent(
+            eventType = "ACCOUNT_UPDATED",
+            accountId = accountId,
+            accountType = "CHECKING",
+            accountIdentifier = "DE123456789",
+            value = "1000.00",
+            currencyCode = "EUR",
+            transactionId = transactionId,
+            transferId = transferId,
+            transactionAmount = TransactionAmountDto(
+                value = "100.0",
+                currencyCode = "EUR"
             ),
-            "transactionPurpose" to "Test purpose",
-            "sourceAccount" to "source-account",
-            "destinationAccount" to "destination-account"
+            transactionType = "DEPOSIT",
+            transactionPurpose = "Test purpose"
         )
 
         // When
-        rabbitMQService.handleAccountUpdatedEvent(event)
+        rabbitMQService.handleAccountUpdatedEvent(eventDto)
 
         // Then
         verify {
@@ -238,9 +250,7 @@ class RabbitMQServiceTest {
                 transactionType = "DEPOSIT",
                 amount = 100.0,
                 currencyCode = "EUR",
-                purpose = "Test purpose",
-                sourceAccount = "source-account",
-                destinationAccount = "destination-account"
+                purpose = "Test purpose"
             )
         }
     }
@@ -248,21 +258,28 @@ class RabbitMQServiceTest {
     @Test
     fun `should handle account updated event with String value`() {
         // Given
-        val event = mapOf(
-            "eventType" to "ACCOUNT_UPDATED",
-            "accountId" to accountId,
-            "transactionType" to "DEPOSIT",
-            "transactionAmount" to mapOf(
-                "value" to "100.0",
-                "currencyCode" to "EUR"
+        val transactionId = UUID.randomUUID().toString()
+        val transferId = UUID.randomUUID().toString()
+
+        val eventDto = AccountUpdatedEvent(
+            eventType = "ACCOUNT_UPDATED",
+            accountId = accountId,
+            accountType = "CHECKING",
+            accountIdentifier = "DE123456789",
+            value = "1000.00",
+            currencyCode = "EUR",
+            transactionId = transactionId,
+            transferId = transferId,
+            transactionAmount = TransactionAmountDto(
+                value = "100.0",
+                currencyCode = "EUR"
             ),
-            "transactionPurpose" to "Test purpose",
-            "sourceAccount" to "source-account",
-            "destinationAccount" to "destination-account"
+            transactionType = "DEPOSIT",
+            transactionPurpose = "Test purpose"
         )
 
         // When
-        rabbitMQService.handleAccountUpdatedEvent(event)
+        rabbitMQService.handleAccountUpdatedEvent(eventDto)
 
         // Then
         verify {
@@ -271,9 +288,7 @@ class RabbitMQServiceTest {
                 transactionType = "DEPOSIT",
                 amount = 100.0,
                 currencyCode = "EUR",
-                purpose = "Test purpose",
-                sourceAccount = "source-account",
-                destinationAccount = "destination-account"
+                purpose = "Test purpose"
             )
         }
     }

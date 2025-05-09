@@ -34,6 +34,7 @@ import org.springframework.test.context.ContextConfiguration
 import org.springframework.web.reactive.function.client.WebClient
 import java.math.BigDecimal
 import java.time.Instant
+import java.util.UUID
 import java.util.stream.Stream
 
 @SpringBootTest(
@@ -82,7 +83,7 @@ class TransferControllerInterACtTest {
         accountService.addMonitoredAccount(transferRequest.sourceAccount)
 
         // Set up the MockServer to respond to the AccountTwinService request
-        MockServerConfig.setupSendTransactionExpectation(transactionResponse.statusCode)
+        MockServerConfig.setupMock(transactionResponse)
 
         // Send the request and get the response
         val response = testClient.prepare(HttpMethod.POST, requestStimulus)
@@ -105,7 +106,7 @@ class TransferControllerInterACtTest {
         accountService.addMonitoredAccount(transferRequest.targetAccount)
 
         // Set up the MockServer to respond to the AccountTwinService request
-        MockServerConfig.setupSendTransactionExpectation(transactionResponse.statusCode)
+        MockServerConfig.setupMock(transactionResponse)
 
         // Send the request and get the response
         val response = testClient.prepare(HttpMethod.POST, requestStimulus)
@@ -159,7 +160,21 @@ class TransferControllerInterACtTest {
                     "/api/transactions",
                     mapOf(),
                     mapOf(),
-                    null,
+                    TransactionResponse(
+                        id = UUID.fromString("00000000-0000-0000-0000-000000000001"),
+                        transferId = UUID.fromString("00000000-0000-0000-0000-000000000002"),
+                        affectedAccountId = "account-123",
+                        amount = Amount(
+                            value = BigDecimal("100.00"),
+                            currencyCode = "EUR"
+                        ),
+                        valuationTimestamp = Instant.parse("2023-01-01T12:00:00Z"),
+                        purpose = "Test transfer",
+                        type = "CREDIT",
+                        sourceAccount = "BankAccount:DE123456789",
+                        destinationAccount = "PayPal:user@example.com",
+                        createdAt = Instant.parse("2023-01-01T12:00:00Z")
+                    ),
                     201
                 )
             ),
@@ -180,7 +195,21 @@ class TransferControllerInterACtTest {
                     "/api/transactions",
                     mapOf(),
                     mapOf(),
-                    null,
+                    TransactionResponse(
+                        id = UUID.fromString("00000000-0000-0000-0000-000000000001"),
+                        transferId = UUID.fromString("00000000-0000-0000-0000-000000000002"),
+                        affectedAccountId = "account-123",
+                        amount = Amount(
+                            value = BigDecimal("100.00"),
+                            currencyCode = "EUR"
+                        ),
+                        valuationTimestamp = Instant.parse("2023-01-01T12:00:00Z"),
+                        purpose = "Test transfer",
+                        type = "CREDIT",
+                        sourceAccount = "BankAccount:DE123456789",
+                        destinationAccount = "PayPal:user@example.com",
+                        createdAt = Instant.parse("2023-01-01T12:00:00Z")
+                    ),
                     201
                 )
             )

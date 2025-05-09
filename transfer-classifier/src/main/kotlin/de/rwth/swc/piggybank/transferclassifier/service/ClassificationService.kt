@@ -1,7 +1,7 @@
 package de.rwth.swc.piggybank.transferclassifier.service
 
 import de.rwth.swc.piggybank.transferclassifier.domain.ClassificationResult
-import de.rwth.swc.piggybank.transferclassifier.domain.Transfer
+import de.rwth.swc.piggybank.transfergateway.domain.Transfer
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 

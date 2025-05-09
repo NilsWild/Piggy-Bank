@@ -4,6 +4,9 @@ server:
 spring:
   application:
     name: account-twin-service
+  jackson:
+    serialization:
+      write-dates-as-timestamps: true
 
   # Database configuration
   datasource:

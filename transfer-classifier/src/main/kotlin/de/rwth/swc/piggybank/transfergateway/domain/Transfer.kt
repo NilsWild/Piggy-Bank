@@ -1,4 +1,4 @@
-package de.rwth.swc.piggybank.transferclassifier.domain
+package de.rwth.swc.piggybank.transfergateway.domain
 
 import java.time.Clock
 import java.time.Instant
@@ -23,4 +23,13 @@ data class Transfer(
     val valuationTimestamp: Instant,
     val purpose: String
 ) {
+    /**
+     * Checks if this transfer involves the specified account (either as source or target).
+     *
+     * @param account The account to check
+     * @return true if the transfer involves the account, false otherwise
+     */
+    fun involvesAccount(account: Account): Boolean =
+        sourceAccount == account || targetAccount == account
+
 }

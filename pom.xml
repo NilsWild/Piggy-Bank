@@ -22,6 +22,7 @@
         <module>notification-service</module>
         <module>transfer-classifier</module>
         <module>goal-service</module>
+        <module>piggybank-expectations</module>
     </modules>
 
     <properties>

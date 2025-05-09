@@ -1,5 +1,6 @@
 package de.rwth.swc.piggybank.notificationservice.config
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import de.rwth.swc.piggybank.notificationservice.service.RabbitMQService
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
@@ -179,8 +180,8 @@ class RabbitMQConfig {
      * @return The message converter
      */
     @Bean
-    fun messageConverter(): Jackson2JsonMessageConverter {
-        return Jackson2JsonMessageConverter()
+    fun messageConverter(objectMapper: ObjectMapper): Jackson2JsonMessageConverter {
+        return Jackson2JsonMessageConverter(objectMapper)
     }
 
     /**

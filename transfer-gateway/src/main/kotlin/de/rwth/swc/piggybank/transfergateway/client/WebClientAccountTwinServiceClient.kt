@@ -2,6 +2,7 @@ package de.rwth.swc.piggybank.transfergateway.client
 
 import de.rwth.swc.piggybank.transfergateway.dto.AccountTwinServiceTransactionRequest
 import de.rwth.swc.piggybank.transfergateway.dto.TransactionRequest
+import de.rwth.swc.piggybank.transfergateway.dto.TransactionResponse
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -37,7 +38,7 @@ class WebClientAccountTwinServiceClient(
                 .uri("/api/transactions")
                 .bodyValue(accountTwinServiceRequest)
                 .retrieve()
-                .bodyToMono(Void::class.java)
+                .bodyToMono(TransactionResponse::class.java)
                 .block()
             logger.info("Transaction sent successfully")
         } catch (e: Exception) {
