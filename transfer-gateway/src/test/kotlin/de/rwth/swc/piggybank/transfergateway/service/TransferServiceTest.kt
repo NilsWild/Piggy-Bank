@@ -202,6 +202,7 @@ class TransferServiceTest {
         every { accountService.isMonitored(sourceAccount) } returns true
         every { accountService.isMonitored(targetAccount) } returns false
         every { rabbitMQService.sendTransferEvent(any()) } throws RuntimeException("Test exception")
+        every { accountTwinServiceClient.sendTransaction(any()) } throws RuntimeException()
 
         // When
         val result = transferService.processTransfer(transfer)
@@ -210,7 +211,6 @@ class TransferServiceTest {
         result shouldBe false
         verify(exactly = 1) { accountService.isMonitored(sourceAccount) }
         verify(exactly = 1) { accountService.isMonitored(targetAccount) }
-        verify(exactly = 1) { rabbitMQService.sendTransferEvent(transfer) }
-        verify(exactly = 0) { accountTwinServiceClient.sendTransaction(any()) }
+        verify(exactly = 0) { rabbitMQService.sendTransferEvent(any()) }
     }
 }

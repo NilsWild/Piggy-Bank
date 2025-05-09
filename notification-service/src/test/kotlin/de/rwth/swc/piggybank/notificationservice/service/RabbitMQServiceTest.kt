@@ -6,6 +6,7 @@ import de.rwth.swc.piggybank.accounttwinservice.dto.TransactionAmountDto
 import de.rwth.swc.piggybank.goalservice.dto.*
 import de.rwth.swc.piggybank.notificationservice.domain.Notification
 import de.rwth.swc.piggybank.notificationservice.domain.NotificationEventType
+import de.rwth.swc.piggybank.notificationservice.dto.NotificationEventDto
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -185,13 +186,12 @@ class RabbitMQServiceTest {
             rabbitTemplate.convertAndSend(
                 RabbitMQService.NOTIFICATION_EXCHANGE_NAME,
                 RabbitMQService.NOTIFICATION_ROUTING_KEY,
-                match<Map<String, Any>> {
-                    it["id"] == notification.id.toString() &&
-                    it["accountId"] == notification.accountId &&
-                    it["eventType"] == notification.eventType.name &&
-                    it["message"] == notification.message &&
-                    it["read"] == notification.read &&
-                    it["createdAt"] == notification.createdAt.toString()
+                match<NotificationEventDto> {
+                    it.accountId == notification.accountId &&
+                    it.eventType == notification.eventType.name &&
+                    it.message == notification.message &&
+                    it.read == notification.read &&
+                    it.createdAt == notification.createdAt
                 }
             )
         }

@@ -60,14 +60,9 @@ class AccountService(
         transactionRepository.save(initialTransaction)
 
         // Add the account to the monitored accounts in the TransferGateway
-        try {
-            val added = transferGatewayClient.addMonitoredAccount(savedAccount)
-            logger.info("Account {} added to monitored accounts in TransferGateway", if (added) "successfully" else "already exists")
-        } catch (e: Exception) {
-            logger.error("Failed to add account to monitored accounts in TransferGateway", e)
-            // We don't want to fail the account creation if the TransferGateway is unavailable,
-            // so we just log the error and continue
-        }
+
+        val added = transferGatewayClient.addMonitoredAccount(savedAccount)
+        logger.info("Account {} added to monitored accounts in TransferGateway", if (added) "successfully" else "already exists")
 
         // Emit account creation event
         rabbitMQService.sendAccountCreatedEvent(savedAccount)
