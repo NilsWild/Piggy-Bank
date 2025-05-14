@@ -60,7 +60,7 @@ class ExpectationsInterACtTest {
             TransferRequest(
                 sourceAccount = Account("BankAccount", "DE123456789",),
                 targetAccount = Account("PayPal", "user@example.com"),
-                amount = Amount(BigDecimal("100.00"), "EUR"),
+                amount = Amount(BigDecimal("211.00"), "EUR"),
                 valuationTimestamp = Instant.parse("2023-01-01T12:00:00Z"),
                 purpose = "Test transfer"
             )
@@ -95,7 +95,7 @@ class ExpectationsInterACtTest {
         )
 
         inherently {
-            notification.body.message.shouldStartWith("You just sent 100,00 EUR")
+            notification.body.message.shouldStartWith("You just sent 211,00 EUR")
         }
     }
 
@@ -172,7 +172,7 @@ class ExpectationsInterACtTest {
                     UUID.fromString("d1a1015d-8651-4122-be9c-4bd02a078e39").toString(),
                     UUID.fromString("a9fd91dc-9a60-490a-9eb3-3812fe2c7d48").toString(),
                     "BALANCE_UPDATE",
-                    "You just sent 100,00 EUR",
+                    "You just sent 211,00 EUR",
                     false,
                     Instant.now(Clock.fixed(Instant.parse("2023-01-01T12:00:00Z"), ZoneId.of("UTC")))
                 )
